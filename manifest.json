@@ -1,0 +1,13 @@
+{
+  "name": "Custom Pivot",
+  "organization": "Pep",
+  "description": "Pivot table where you can set measures to be rows or columns.",
+  "logoUrl": "gs://custompivot/custompivotlookervis/logo.png",
+  "packageUrl": "gs://custompivot/custompivotlookervis/viz.js",
+  "configUrl": "gs://custompivot/custompivotlookervis/viz.json",
+  "components": [{
+    "id": "myPivot",
+    "label": "Custom Pivot",
+    "resourceId": "main"
+  }]
+}

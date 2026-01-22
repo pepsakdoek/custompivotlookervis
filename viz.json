@@ -1,0 +1,79 @@
+{
+  "data": [
+    {
+      "id": "concepts",
+      "label": "Pivot Data",
+      "elements": [
+        {
+          "id": "rowDimensions",
+          "label": "Row Dimensions",
+          "type": "DIMENSION",
+          "options": { "min": 0, "max": 10 }
+        },
+        {
+          "id": "columnDimensions",
+          "label": "Column Dimensions (Headers)",
+          "type": "DIMENSION",
+          "options": { "min": 1, "max": 10 }
+        },
+        {
+          "id": "metrics",
+          "label": "Metrics",
+          "type": "METRIC",
+          "options": { "min": 1, "max": 20 }
+        },
+        {
+          "id": "rowLimit",
+          "label": "Row Limit",
+          "type": "TEXTINPUT",
+          "defaultValue": "100"
+        }     
+      ]
+    }
+  ],
+  "style": [
+    {
+      "id": "pivotOptions",
+      "label": "Pivot Settings",
+      "elements": [
+        {
+          "id": "showMeasuresAsRows",
+          "label": "Show measures as rows",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        }
+      ]
+    },
+    {
+      "id": "totalsOptions",
+      "label": "Totals and Subtotals",
+      "elements": [
+        {
+          "id": "showColumnTotals",
+          "label": "Show column totals",
+          "type": "BOOLEAN",
+          "defaultValue": false
+        }
+      ]
+    },
+    {
+      "id": "advancedSorting",
+      "label": "Advanced Sorting",
+      "elements": [
+        {
+          "id": "sortConfig",
+          "label": "Sort Rules (CSV)",
+          "type": "TEXTINPUT",
+          "placeholder": "Dept, Sales, sum, desc",
+          "defaultValue": ""
+        }
+      ]
+    }
+  ],
+  "interactions": [
+    {
+      "id": "onClick",
+      "supportedActions": ["FILTER"]
+    }
+  ]
+}
