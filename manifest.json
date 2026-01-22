@@ -4,10 +4,10 @@
   "description": "Pivot table where you can set measures to be rows or columns.",
   "logoUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
 
-  "packageUrl": "https://example.com/pep-custom-pivot",
-  "supportUrl": "https://example.com/support",
-  "privacyPolicyUrl": "https://example.com/privacy",
-  "termsOfServiceUrl": "https://example.com/terms",
+  "packageUrl": "https://github.com/pepsakdoek/custompivotlookervis",
+  "supportUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki",
+  "privacyPolicyUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Privacy",
+  "termsOfServiceUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Terms",
 
   "devMode": true,
 
