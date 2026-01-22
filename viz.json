@@ -33,7 +33,7 @@
         {
           "id": "showMeasuresAsRows",
           "label": "Show measures as rows",
-          "type": "SELECT_RADIO",
+          "type": "CHECKBOX",
           "defaultValue": false
         }
       ]
