@@ -1,13 +1,26 @@
 {
-  "name": "Custom Pivot",
+  "name": "Pep Custom Pivot",
   "organization": "Pep",
   "description": "Pivot table where you can set measures to be rows or columns.",
-  "logoUrl": "gs://custompivot/custompivotlookervis/logo.png",
-  "packageUrl": "gs://custompivot/custompivotlookervis/viz.js",
-  "configUrl": "gs://custompivot/custompivotlookervis/viz.json",
-  "components": [{
-    "id": "myPivot",
-    "label": "Custom Pivot",
-    "resourceId": "main"
-  }]
+  "logoUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
+
+  "packageUrl": "https://example.com/pep-custom-pivot",
+  "supportUrl": "https://example.com/support",
+  "privacyPolicyUrl": "https://example.com/privacy",
+  "termsOfServiceUrl": "https://example.com/terms",
+
+  "devMode": true,
+
+  "components": [
+    {
+      "id": "pepCustomPivot",
+      "name": "Custom Pivot",
+      "description": "Flexible pivot table visualization",
+      "iconUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
+      "resource": {
+        "js": "gs://custompivot/custompivotlookervis/viz.js",
+        "config": "gs://custompivot/custompivotlookervis/viz.json"
+      }
+    }
+  ]
 }

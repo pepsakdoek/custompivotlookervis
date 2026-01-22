@@ -1,35 +1,30 @@
 dscc.subscribeToData(function(data) {
+  if (!data || !data.tables || !data.tables.DEFAULT) return;
+
   const rows = data.tables.DEFAULT;
   const fields = data.fields;
   const style = data.style;
   
   // 1. SAFETY CHECK
   const rowCount = rows.length;
-  const MAX_SAFE_ROWS = 1000; 
+  const MAX_SAFE_ROWS = 1000;
 
   if (rowCount > MAX_SAFE_ROWS) {
-    document.body.innerHTML = `
-      <div style="font-family:sans-serif; color:#666; padding:20px; border:2px dashed #ccc; text-align:center;">
-        <h3>Too much data to display (${rowCount.toLocaleString()} rows)</h3>
-        <p>Please apply a filter to see the pivot table.</p>
-      </div>
-    `;
+    document.body.innerHTML = `<div>Too many rows (${rowCount}). Please filter.</div>`;
     return; 
   }
 
-  // 2. SORTING (Before Transposition)
+  // 2. SORTING
   const sortRules = style.sortConfig && style.sortConfig.value;
   if (sortRules && sortRules.includes(',')) {
     const parts = sortRules.split(',').map(s => s.trim());
-    // We only need the field name and the order (ASC/DESC)
     const sortFieldName = parts[1] || parts[0]; 
     const order = parts[3] || 'asc';
 
-    // Flatten all fields to find the target
     const allFields = [].concat(fields.rowDimensions || [], fields.columnDimensions || [], fields.metrics || []);
     const targetField = allFields.find(f => f.name.replace(/\s+/g, '') === sortFieldName.replace(/\s+/g, ''));
 
-    if (targetField) {
+    if (targetField && targetField.id) { // Added null check here
       rows.sort((a, b) => {
         let valA = a[targetField.id];
         let valB = b[targetField.id];

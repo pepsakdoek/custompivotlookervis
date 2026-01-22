@@ -21,13 +21,7 @@
           "label": "Metrics",
           "type": "METRIC",
           "options": { "min": 1, "max": 20 }
-        },
-        {
-          "id": "rowLimit",
-          "label": "Row Limit",
-          "type": "TEXTINPUT",
-          "defaultValue": "100"
-        }     
+        }
       ]
     }
   ],
@@ -41,19 +35,13 @@
           "label": "Show measures as rows",
           "type": "BOOLEAN",
           "defaultValue": false
-        }
-      ]
-    },
-    {
-      "id": "totalsOptions",
-      "label": "Totals and Subtotals",
-      "elements": [
+        },
         {
-          "id": "showColumnTotals",
-          "label": "Show column totals",
-          "type": "BOOLEAN",
-          "defaultValue": false
-        }
+          "id": "rowLimit",
+          "label": "Row Limit",
+          "type": "TEXTINPUT",
+          "defaultValue": "100"
+        } 
       ]
     },
     {
@@ -68,12 +56,6 @@
           "defaultValue": ""
         }
       ]
-    }
-  ],
-  "interactions": [
-    {
-      "id": "onClick",
-      "supportedActions": ["FILTER"]
     }
   ]
 }
