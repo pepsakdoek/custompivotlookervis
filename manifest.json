@@ -18,8 +18,9 @@
       "description": "Flexible pivot table visualization",
       "iconUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
       "resource": {
-        "js": "gs://custompivot/custompivotlookervis/viz.js",
-        "config": "gs://custompivot/custompivotlookervis/viz.json"
+        "js": "viz.js",
+        "config": "viz.json",
+        "css": "viz.css"
       }
     }
   ]

@@ -2,189 +2,28 @@
   "data": [
     {
       "id": "concepts",
-      "label": "Pivot Data",
+      "label": "Data",
       "elements": [
         {
           "id": "rowDimensions",
-          "label": "Row Dimensions",
+          "label": "Dimensions",
           "type": "DIMENSION",
-          "options": { "min": 0, "max": 5 }
-        },
-        {
-          "id": "columnDimensions",
-          "label": "Column Dimensions",
-          "type": "DIMENSION",
-          "options": { "min": 0, "max": 5 }
+          "options": {
+            "min": 1,
+            "max": 10
+          }
         },
         {
           "id": "metrics",
           "label": "Metrics",
           "type": "METRIC",
-          "options": { "min": 1, "max": 20 }
+          "options": {
+            "min": 1,
+            "max": 20
+          }
         }
       ]
     }
   ],
-  "style": [
-    {
-      "id": "pivotOptions",
-      "label": "Pivot Options",
-      "elements": [
-        {
-          "id": "showMeasuresAsRows",
-          "label": "Show measures as rows",
-          "type": "CHECKBOX",
-          "defaultValue": false
-        }
-      ]
-    },
-
-    {
-      "id": "sorting",
-      "label": "Sorting",
-      "elements": [
-
-        {
-          "id": "sortDim1Mode",
-          "label": "Row Dimension 1 – Sort by",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "None", "value": "none" },
-            { "label": "Dimension value", "value": "dimension" },
-            { "label": "Metric", "value": "metric" }
-          ],
-          "defaultValue": "none"
-        },
-        {
-          "id": "sortDim1Metric",
-          "label": "Row Dimension 1 – Metric",
-          "type": "SELECT_SINGLE",
-          "options": { "fromField": "metrics" }
-        },
-        {
-          "id": "sortDim1Direction",
-          "label": "Row Dimension 1 – Direction",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "Ascending", "value": "asc" },
-            { "label": "Descending", "value": "desc" }
-          ],
-          "defaultValue": "asc"
-        },
-
-        {
-          "id": "sortDim2Mode",
-          "label": "Row Dimension 2 – Sort by",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "None", "value": "none" },
-            { "label": "Dimension value", "value": "dimension" },
-            { "label": "Metric", "value": "metric" }
-          ],
-          "defaultValue": "none"
-        },
-        {
-          "id": "sortDim2Metric",
-          "label": "Row Dimension 2 – Metric",
-          "type": "SELECT_SINGLE",
-          "options": { "fromField": "metrics" }
-        },
-        {
-          "id": "sortDim2Direction",
-          "label": "Row Dimension 2 – Direction",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "Ascending", "value": "asc" },
-            { "label": "Descending", "value": "desc" }
-          ],
-          "defaultValue": "asc"
-        },
-
-        {
-          "id": "sortDim3Mode",
-          "label": "Row Dimension 3 – Sort by",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "None", "value": "none" },
-            { "label": "Dimension value", "value": "dimension" },
-            { "label": "Metric", "value": "metric" }
-          ],
-          "defaultValue": "none"
-        },
-        {
-          "id": "sortDim3Metric",
-          "label": "Row Dimension 3 – Metric",
-          "type": "SELECT_SINGLE",
-          "options": { "fromField": "metrics" }
-        },
-        {
-          "id": "sortDim3Direction",
-          "label": "Row Dimension 3 – Direction",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "Ascending", "value": "asc" },
-            { "label": "Descending", "value": "desc" }
-          ],
-          "defaultValue": "asc"
-        },
-
-        {
-          "id": "sortDim4Mode",
-          "label": "Row Dimension 4 – Sort by",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "None", "value": "none" },
-            { "label": "Dimension value", "value": "dimension" },
-            { "label": "Metric", "value": "metric" }
-          ],
-          "defaultValue": "none"
-        },
-        {
-          "id": "sortDim4Metric",
-          "label": "Row Dimension 4 – Metric",
-          "type": "SELECT_SINGLE",
-          "options": { "fromField": "metrics" }
-        },
-        {
-          "id": "sortDim4Direction",
-          "label": "Row Dimension 4 – Direction",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "Ascending", "value": "asc" },
-            { "label": "Descending", "value": "desc" }
-          ],
-          "defaultValue": "asc"
-        },
-
-        {
-          "id": "sortDim5Mode",
-          "label": "Row Dimension 5 – Sort by",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "None", "value": "none" },
-            { "label": "Dimension value", "value": "dimension" },
-            { "label": "Metric", "value": "metric" }
-          ],
-          "defaultValue": "none"
-        },
-        {
-          "id": "sortDim5Metric",
-          "label": "Row Dimension 5 – Metric",
-          "type": "SELECT_SINGLE",
-          "options": { "fromField": "metrics" }
-        },
-        {
-          "id": "sortDim5Direction",
-          "label": "Row Dimension 5 – Direction",
-          "type": "SELECT_SINGLE",
-          "options": [
-            { "label": "Ascending", "value": "asc" },
-            { "label": "Descending", "value": "desc" }
-          ],
-          "defaultValue": "asc"
-        }
-
-      ]
-    }
-  ]
+  "style": []
 }

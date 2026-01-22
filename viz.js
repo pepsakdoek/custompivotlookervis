@@ -1,48 +1,59 @@
 dscc.subscribeToData(function(data) {
-	if (!data || !data.tables || !data.tables.DEFAULT) {
-		document.body.innerHTML = 'No data received';
-		return;
-	}
+  console.log('Pivot Data version 0.2');
 
-	const rows = data.tables.DEFAULT;
-	const fields = data.fields || {};
+  // Clear the body
+  document.body.innerHTML = '';
 
-	const rowDims = fields.rowDimensions || [];
-	const colDims = fields.columnDimensions || [];
-	const metrics = fields.metrics || [];
+  const tableData = data.tables.DEFAULT;
 
-	if (!rows.length) {
-		document.body.innerHTML = 'No rows to display';
-		return;
-	}
+  if (!tableData) {
+    document.body.innerHTML = 'No data to display.';
+    return;
+  }
 
-	const allFields = rowDims.concat(colDims, metrics);
-	const maxRows = Math.min(rows.length, 10);
+  // Use the field IDs from viz.json
+  const dimensionFields = data.fields.rowDimensions || [];
+  const metricFields = data.fields.metrics || [];
 
-	let html = '<table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:12px">';
-	html += '<thead><tr>';
+  if (dimensionFields.length === 0 || metricFields.length === 0) {
+    document.body.innerHTML = 'Please add at least one dimension and one metric.';
+    return;
+  }
 
-	allFields.forEach(f => {
-		html += `<th style="border:1px solid #ccc;padding:6px;background:#f8f9fa;text-align:left">${f.name}</th>`;
-	});
+  const allFields = [...dimensionFields, ...metricFields];
 
-	html += '</tr></thead><tbody>';
+  // Create table
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
 
-	for (let i = 0; i < maxRows; i++) {
-		const row = rows[i];
-		html += '<tr>';
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  document.body.appendChild(table);
 
-		allFields.forEach(f => {
-			const val = row[f.id];
-			html += `<td style="border:1px solid #eee;padding:6px;text-align:right">${val}</td>`;
-		});
+  // Create header row
+  const headerRow = document.createElement('tr');
+  allFields.forEach(field => {
+    const th = document.createElement('th');
+    th.textContent = field.name;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
 
-		html += '</tr>';
-	}
+  // Create data rows
+  tableData.forEach(rowData => {
+    const tr = document.createElement('tr');
+    allFields.forEach(field => {
+      const td = document.createElement('td');
+      td.textContent = rowData[field.id];
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
 
-	html += '</tbody></table>';
-	html += `<div style="margin-top:6px;color:#666">Showing ${maxRows} of ${rows.length} rows</div>`;
-
-	document.body.innerHTML = html;
-
-}, { transform: dscc.tableTransform });
+  // Add footer
+  const footer = document.createElement('div');
+  footer.classList.add('footer');
+  footer.textContent = `Showing ${tableData.length} rows.`;
+  document.body.appendChild(footer);
+});
