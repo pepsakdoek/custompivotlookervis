@@ -3,14 +3,11 @@
   "organization": "Pep",
   "description": "Pivot table where you can set measures to be rows or columns.",
   "logoUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
-
   "packageUrl": "https://github.com/pepsakdoek/custompivotlookervis",
   "supportUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki",
   "privacyPolicyUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Privacy",
   "termsOfServiceUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Terms",
-
   "devMode": true,
-
   "components": [
     {
       "id": "pepCustomPivot",
@@ -18,9 +15,9 @@
       "description": "Flexible pivot table visualization",
       "iconUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
       "resource": {
-        "js": "viz.js",
-        "config": "viz.json",
-        "css": "viz.css"
+        "js": "gs://custompivot/custompivotlookervis/viz.js",
+        "config": "gs://custompivot/custompivotlookervis/viz.json",
+        "css": "gs://custompivot/custompivotlookervis/viz.css"
       }
     }
   ]
