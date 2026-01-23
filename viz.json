@@ -2,56 +2,837 @@
   "data": [
     {
       "id": "concepts",
-      "label": "Data Settings",
+      "label": "Data",
       "elements": [
-        { "id": "dimensions", "label": "Row Dimensions", "type": "DIMENSION", "options": { "min": 1, "max": 5 } },
-        { "id": "columnDimensions", "label": "Column Dimensions", "type": "DIMENSION", "options": { "min": 0, "max": 5 } },
-        { "id": "metrics", "label": "Metrics", "type": "METRIC", "options": { "min": 1, "max": 10 } }
+        {
+          "id": "dimensions",
+          "label": "Row Dimensions",
+          "type": "DIMENSION",
+          "options": {
+            "min": 0,
+            "max": 5
+          }
+        },
+        {
+          "id": "columnDimensions",
+          "label": "Column Dimensions",
+          "type": "DIMENSION",
+          "options": {
+            "min": 0,
+            "max": 5
+          }
+        },
+        {
+          "id": "metrics",
+          "label": "Metrics",
+          "type": "METRIC",
+          "options": {
+            "min": 1,
+            "max": 10
+          }
+        }
       ]
     }
   ],
   "style": [
     {
-      "id": "pivotSection",
-      "label": "Pivot Settings",
+      "id": "pivotControls",
+      "label": "Pivot Controls",
       "elements": [
-        { "id": "measuresAsRows", "label": "Show Measures as Rows", "type": "checkbox", "defaultValue": false }
+        {
+          "id": "measureLayout",
+          "label": "Measure Display",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "METRIC_COLUMN",
+          "options": [
+            {
+              "label": "Standard (neighboring columns)",
+              "value": "METRIC_COLUMN"
+            },
+            {
+              "label": "Measures as Rows",
+              "value": "METRIC_ROW"
+            },
+            {
+              "label": "Measures First in Columns",
+              "value": "MEASURE_FIRST_COLUMN"
+            },
+            {
+              "label": "Measures First in Rows",
+              "value": "MEASURE_FIRST_ROW"
+            }
+          ]
+        }
       ]
     },
     {
-      "id": "sortingSection",
-      "label": "Advanced Sorting",
+      "id": "rowDimSettings",
+      "label": "Row Dimension Settings",
       "elements": [
         {
-          "id": "sortFieldType",
-          "label": "Sort By",
-          "type": "select_single",
+          "id": "rd_subtotal_1",
+          "label": "Show Subtotal Row Dimension 1",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "rd_sort_type_1",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
           "defaultValue": "DIMENSION",
           "options": [
-            { "label": "First Dimension", "value": "DIMENSION" },
-            { "label": "First Metric", "value": "METRIC" }
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
           ]
         },
         {
-          "id": "aggregationType",
-          "label": "Metric Aggregation (if Metric selected)",
-          "type": "select_single",
+          "id": "rd_sort_metric_index_1",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "rd_sort_agg_1",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
           "defaultValue": "SUM",
           "options": [
-            { "label": "Sum", "value": "SUM" },
-            { "label": "Average", "value": "AVG" },
-            { "label": "Min", "value": "MIN" },
-            { "label": "Max", "value": "MAX" }            
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
           ]
         },
         {
-          "id": "sortOrder",
-          "label": "Order",
-          "type": "select_single",
+          "id": "rd_sort_dir_1",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
           "defaultValue": "ASC",
           "options": [
-            { "label": "Ascending", "value": "ASC" },
-            { "label": "Descending", "value": "DESC" }
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "rd_subtotal_2",
+          "label": "Show Subtotal",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "rd_sort_type_2",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_metric_index_2",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "rd_sort_agg_2",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_dir_2",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "rd_subtotal_3",
+          "label": "Show Subtotal Row Dimension 3",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "rd_sort_type_3",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_metric_index_3",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "rd_sort_agg_3",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_dir_3",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "rd_subtotal_4",
+          "label": "Show Subtotal Row Dimension 4",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "rd_sort_type_4",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_metric_index_4",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "rd_sort_agg_4",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_dir_4",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "rd_subtotal_5",
+          "label": "Show Subtotal Row Dimension 5",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "rd_sort_type_5",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_metric_index_5",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "rd_sort_agg_5",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "rd_sort_dir_5",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "colDimSettings",
+      "label": "Column Dimension Settings",
+      "elements": [
+        {
+          "id": "cd_subtotal_1",
+          "label": "Show Subtotal Column Dimension 1",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "cd_sort_type_1",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_metric_index_1",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "cd_sort_agg_1",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_dir_1",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "cd_subtotal_2",
+          "label": "Show Subtotal Column Dimension 2",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "cd_sort_type_2",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_metric_index_2",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "cd_sort_agg_2",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_dir_2",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "cd_subtotal_3",
+          "label": "Show Subtotal Row Dimension 3",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "cd_sort_type_3",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_metric_index_3",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "cd_sort_agg_3",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_dir_3",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "cd_subtotal_4",
+          "label": "Show Subtotal Row Dimension 4", 
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "cd_sort_type_4",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_metric_index_4",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "cd_sort_agg_4",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_dir_4",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
+          ]
+        },
+        {
+          "id": "cd_subtotal_5",
+          "label": "Show Subtotal Column Dimension 5",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "cd_sort_type_5",
+          "label": "Sort Type",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DIMENSION",
+          "options": [
+            {
+              "label": "Dimension Value",
+              "value": "DIMENSION"
+            },
+            {
+              "label": "Measure",
+              "value": "METRIC"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_metric_index_5",
+          "label": "Metric Index (1-based)",
+          "type": "TEXTINPUT",
+          "defaultValue": "1"
+        },
+        {
+          "id": "cd_sort_agg_5",
+          "label": "Metric Aggregation",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "SUM",
+          "options": [
+            {
+              "label": "Sum",
+              "value": "SUM"
+            },
+            {
+              "label": "Average",
+              "value": "AVG"
+            },
+            {
+              "label": "Count",
+              "value": "COUNT"
+            },
+            {
+              "label": "Count Distinct",
+              "value": "COUNT_DISTINCT"
+            },
+            {
+              "label": "Min",
+              "value": "MIN"
+            },
+            {
+              "label": "Max",
+              "value": "MAX"
+            }
+          ]
+        },
+        {
+          "id": "cd_sort_dir_5",
+          "label": "Sort Direction",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "ASC",
+          "options": [
+            {
+              "label": "Ascending",
+              "value": "ASC"
+            },
+            {
+              "label": "Descending",
+              "value": "DESC"
+            }
           ]
         }
       ]
