@@ -2,22 +2,41 @@
   "data": [
     {
       "id": "concepts",
-      "label": "Data",
+      "label": "Data Settings",
       "elements": [
         {
           "id": "dimensions",
-          "label": "Dimensions",
+          "label": "Row Dimensions",
           "type": "DIMENSION",
-          "options": { "min": 1, "max": 10 }
+          "options": { "min": 1, "max": 5 }
+        },
+        {
+          "id": "columnDimensions",
+          "label": "Column Dimensions",
+          "type": "DIMENSION",
+          "options": { "min": 0, "max": 5 }
         },
         {
           "id": "metrics",
           "label": "Metrics",
           "type": "METRIC",
-          "options": { "min": 1, "max": 20 }
+          "options": { "min": 1, "max": 10 }
         }
       ]
     }
   ],
-  "style": []
+  "style": [
+    {
+      "id": "pivotOptions",
+      "label": "Pivot Settings",
+      "elements": [
+        {
+          "id": "measuresAsRows",
+          "label": "Show Measures as Rows",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        }
+      ]
+    }
+  ]
 }

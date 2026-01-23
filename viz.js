@@ -30,72 +30,91 @@ var _=R(/*! ./types */"./src/types.ts");!function(e){for(var R in e)N.hasOwnProp
 
 function drawViz(data) {
   document.body.innerHTML = '';
-  
-  // Safety check for data
-  if (!data.tables || !data.tables.DEFAULT) {
-    document.body.innerHTML = '<b>Waiting for data...</b>';
-    return;
-  }
+  if (!data.tables || !data.tables.DEFAULT) return;
 
   const rows = data.tables.DEFAULT;
   const fields = data.fields;
+  
+  // DSCC ObjectTransform style access:
+  // Values are usually at data.style.ELEMENT_ID.value
+  const style = data.style || {};
+  const measuresAsRows = style.measuresAsRows ? style.measuresAsRows.value : false;
 
-  // Create table elements
   const table = document.createElement('table');
   table.style.width = '100%';
   table.style.borderCollapse = 'collapse';
   table.border = "1";
-  
   const thead = document.createElement('thead');
   const tbody = document.createElement('tbody');
   
-  // Create Headers
-  const headerRow = document.createElement('tr');
-  headerRow.style.backgroundColor = '#f2f2f2';
-  
-  const dimHeaders = fields.dimensions || [];
-  const metHeaders = fields.metrics || [];
-  
-  dimHeaders.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h.name;
-    headerRow.appendChild(th);
-  });
-  
-  metHeaders.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h.name;
-    headerRow.appendChild(th);
-  });
-  
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
+  if (measuresAsRows) {
+    // --- MEASURES AS ROWS MODE ---
+    const headerRow = document.createElement('tr');
+    (fields.dimensions || []).forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h.name;
+      headerRow.appendChild(th);
+    });
+    // We add column dimension headers if they exist
+    (fields.columnDimensions || []).forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h.name;
+      headerRow.appendChild(th);
+    });
+    headerRow.innerHTML += '<th>Measure</th><th>Value</th>';
+    thead.appendChild(headerRow);
 
-  // Create Body Rows
-  rows.forEach(row => {
-    const tr = document.createElement('tr');
-    
-    // Add Dimension Values
-    if (row.dimensions) {
-      row.dimensions.forEach(val => {
-        const td = document.createElement('td');
-        td.textContent = val;
-        tr.appendChild(td);
+    rows.forEach(row => {
+      (fields.metrics || []).forEach((mHeader, i) => {
+        const tr = document.createElement('tr');
+        // Row Dims
+        (row.dimensions || []).forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        // Column Dims
+        (row.columnDimensions || []).forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        // Measure Name & Value
+        const tdName = document.createElement('td');
+        tdName.textContent = mHeader.name;
+        tr.appendChild(tdName);
+
+        const tdVal = document.createElement('td');
+        const val = row.metrics[i];
+        tdVal.textContent = typeof val === 'number' ? new Intl.NumberFormat().format(val) : val;
+        tr.appendChild(tdVal);
+        tbody.appendChild(tr);
       });
-    }
-    
-    // Add Metric Values
-    if (row.metrics) {
-      row.metrics.forEach(val => {
+    });
+  } else {
+    // --- NORMAL FLAT TABLE MODE ---
+    const headerRow = document.createElement('tr');
+    const allHeaders = [...(fields.dimensions || []), ...(fields.columnDimensions || []), ...(fields.metrics || [])];
+    allHeaders.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h.name;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      const allData = [...(row.dimensions || []), ...(row.columnDimensions || []), ...(row.metrics || [])];
+      allData.forEach(val => {
         const td = document.createElement('td');
         td.textContent = typeof val === 'number' ? new Intl.NumberFormat().format(val) : val;
         tr.appendChild(td);
       });
-    }
-    
-    tbody.appendChild(tr);
-  });
+      tbody.appendChild(tr);
+    });
+  }
 
+  table.appendChild(thead);
   table.appendChild(tbody);
   document.body.appendChild(table);
 }
