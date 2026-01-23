@@ -4,37 +4,55 @@
       "id": "concepts",
       "label": "Data Settings",
       "elements": [
-        {
-          "id": "dimensions",
-          "label": "Row Dimensions",
-          "type": "DIMENSION",
-          "options": { "min": 1, "max": 5 }
-        },
-        {
-          "id": "columnDimensions",
-          "label": "Column Dimensions",
-          "type": "DIMENSION",
-          "options": { "min": 0, "max": 5 }
-        },
-        {
-          "id": "metrics",
-          "label": "Metrics",
-          "type": "METRIC",
-          "options": { "min": 1, "max": 10 }
-        }
+        { "id": "dimensions", "label": "Row Dimensions", "type": "DIMENSION", "options": { "min": 1, "max": 5 } },
+        { "id": "columnDimensions", "label": "Column Dimensions", "type": "DIMENSION", "options": { "min": 0, "max": 5 } },
+        { "id": "metrics", "label": "Metrics", "type": "METRIC", "options": { "min": 1, "max": 10 } }
       ]
     }
   ],
   "style": [
     {
-      "id": "pivotOptions",
+      "id": "pivotSection",
       "label": "Pivot Settings",
       "elements": [
+        { "id": "measuresAsRows", "label": "Show Measures as Rows", "type": "checkbox", "defaultValue": false }
+      ]
+    },
+    {
+      "id": "sortingSection",
+      "label": "Advanced Sorting",
+      "elements": [
         {
-          "id": "measuresAsRows",
-          "label": "Show Measures as Rows",
-          "type": "CHECKBOX",
-          "defaultValue": false
+          "id": "sortFieldType",
+          "label": "Sort By",
+          "type": "select_single",
+          "defaultValue": "DIMENSION",
+          "options": [
+            { "label": "First Dimension", "value": "DIMENSION" },
+            { "label": "First Metric", "value": "METRIC" }
+          ]
+        },
+        {
+          "id": "aggregationType",
+          "label": "Metric Aggregation (if Metric selected)",
+          "type": "select_single",
+          "defaultValue": "SUM",
+          "options": [
+            { "label": "Sum", "value": "SUM" },
+            { "label": "Average", "value": "AVG" },
+            { "label": "Min", "value": "MIN" },
+            { "label": "Max", "value": "MAX" }            
+          ]
+        },
+        {
+          "id": "sortOrder",
+          "label": "Order",
+          "type": "select_single",
+          "defaultValue": "ASC",
+          "options": [
+            { "label": "Ascending", "value": "ASC" },
+            { "label": "Descending", "value": "DESC" }
+          ]
         }
       ]
     }

@@ -34,85 +34,104 @@ function drawViz(data) {
 
   const rows = data.tables.DEFAULT;
   const fields = data.fields;
-  
-  // DSCC ObjectTransform style access:
-  // Values are usually at data.style.ELEMENT_ID.value
   const style = data.style || {};
   const measuresAsRows = style.measuresAsRows ? style.measuresAsRows.value : false;
+  
+  // Sorting Params
+  const sortType = style.sortFieldType ? style.sortFieldType.value : 'DIMENSION';
+  const sortAgg = style.aggregationType ? style.aggregationType.value : 'SUM';
+  const sortOrder = style.sortOrder ? style.sortOrder.value : 'ASC';
 
+  // 1. Group Data
+  const grouped = {};
+  const uniqueColVals = new Set();
+
+  rows.forEach(row => {
+    const rowKey = (row.dimensions || []).join(' | ');
+    const colKey = (row.columnDimensions || []).join(' | ') || 'Value';
+    uniqueColVals.add(colKey);
+
+    if (!grouped[rowKey]) {
+      grouped[rowKey] = {
+        cols: {},
+        dimValues: row.dimensions, // Keep for sorting
+        metricAggregates: fields.metrics.map(() => []) // For AVG/SUM calculation
+      };
+    }
+    grouped[rowKey].cols[colKey] = row.metrics;
+    
+    // Store metrics for cross-column aggregation
+    row.metrics.forEach((m, i) => grouped[rowKey].metricAggregates[i].push(m));
+  });
+
+  const sortedColHeaders = Array.from(uniqueColVals).sort();
+  let rowKeys = Object.keys(grouped);
+
+  // 2. Sorting Logic
+  rowKeys.sort((a, b) => {
+    let valA, valB;
+
+    if (sortType === 'DIMENSION') {
+      valA = grouped[a].dimValues[0];
+      valB = grouped[b].dimValues[0];
+    } else {
+      // Metric Aggregation (on the first metric [0])
+      const arrA = grouped[a].metricAggregates[0];
+      const arrB = grouped[b].metricAggregates[0];
+      
+      if (sortAgg === 'SUM') {
+        valA = arrA.reduce((s, v) => s + v, 0);
+        valB = arrB.reduce((s, v) => s + v, 0);
+      } else if (sortAgg === 'AVG') {
+        valA = arrA.reduce((s, v) => s + v, 0) / arrA.length;
+        valB = arrB.reduce((s, v) => s + v, 0) / arrB.length;
+      } else if (sortAgg === 'MIN') {
+        valA = Math.min(...arrA);
+        valB = Math.min(...arrB);
+      } else {
+        valA = Math.max(...arrA);
+        valB = Math.max(...arrB);
+      }
+    }
+
+    // Compare
+    let result = 0;
+    if (valA < valB) result = -1;
+    if (valA > valB) result = 1;
+    return sortOrder === 'ASC' ? result : -result;
+  });
+
+  // 3. Render Table (Simplified for brevity, similar to Level 3)
   const table = document.createElement('table');
-  table.style.width = '100%';
-  table.style.borderCollapse = 'collapse';
   table.border = "1";
   const thead = document.createElement('thead');
   const tbody = document.createElement('tbody');
   
-  if (measuresAsRows) {
-    // --- MEASURES AS ROWS MODE ---
-    const headerRow = document.createElement('tr');
-    (fields.dimensions || []).forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h.name;
-      headerRow.appendChild(th);
-    });
-    // We add column dimension headers if they exist
-    (fields.columnDimensions || []).forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h.name;
-      headerRow.appendChild(th);
-    });
-    headerRow.innerHTML += '<th>Measure</th><th>Value</th>';
-    thead.appendChild(headerRow);
+  // Render Headers...
+  const hRow = document.createElement('tr');
+  (fields.dimensions || []).forEach(h => hRow.innerHTML += `<th>${h.name}</th>`);
+  if (measuresAsRows) hRow.innerHTML += '<th>Measure</th>';
+  sortedColHeaders.forEach(c => hRow.innerHTML += `<th>${c}</th>`);
+  thead.appendChild(hRow);
 
-    rows.forEach(row => {
-      (fields.metrics || []).forEach((mHeader, i) => {
-        const tr = document.createElement('tr');
-        // Row Dims
-        (row.dimensions || []).forEach(val => {
-          const td = document.createElement('td');
-          td.textContent = val;
-          tr.appendChild(td);
-        });
-        // Column Dims
-        (row.columnDimensions || []).forEach(val => {
-          const td = document.createElement('td');
-          td.textContent = val;
-          tr.appendChild(td);
-        });
-        // Measure Name & Value
-        const tdName = document.createElement('td');
-        tdName.textContent = mHeader.name;
-        tr.appendChild(tdName);
-
-        const tdVal = document.createElement('td');
-        const val = row.metrics[i];
-        tdVal.textContent = typeof val === 'number' ? new Intl.NumberFormat().format(val) : val;
-        tr.appendChild(tdVal);
-        tbody.appendChild(tr);
-      });
-    });
-  } else {
-    // --- NORMAL FLAT TABLE MODE ---
-    const headerRow = document.createElement('tr');
-    const allHeaders = [...(fields.dimensions || []), ...(fields.columnDimensions || []), ...(fields.metrics || [])];
-    allHeaders.forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h.name;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-
-    rows.forEach(row => {
+  // Render Rows in the new Sorted Order...
+  rowKeys.forEach(rowKey => {
+    const metricsToRender = measuresAsRows ? fields.metrics : [fields.metrics[0]];
+    
+    metricsToRender.forEach((mField, mIdx) => {
       const tr = document.createElement('tr');
-      const allData = [...(row.dimensions || []), ...(row.columnDimensions || []), ...(row.metrics || [])];
-      allData.forEach(val => {
-        const td = document.createElement('td');
-        td.textContent = typeof val === 'number' ? new Intl.NumberFormat().format(val) : val;
-        tr.appendChild(td);
+      // Dimension Cells
+      grouped[rowKey].dimValues.forEach(v => tr.innerHTML += `<td>${v}</td>`);
+      // Measure Name
+      if (measuresAsRows) tr.innerHTML += `<td>${mField.name}</td>`;
+      // Data Cells
+      sortedColHeaders.forEach(c => {
+        const val = grouped[rowKey].cols[c] ? grouped[rowKey].cols[c][mIdx] : '-';
+        tr.innerHTML += `<td>${typeof val === 'number' ? new Intl.NumberFormat().format(val) : val}</td>`;
       });
       tbody.appendChild(tr);
     });
-  }
+  });
 
   table.appendChild(thead);
   table.appendChild(tbody);
