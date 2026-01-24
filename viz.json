@@ -71,7 +71,7 @@
       "elements": [
         {
           "id": "rd_subtotal_1",
-          "label": "Show Subtotal Row Dimension 1",
+          "label": "Subtotal Row Dimension 1",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -147,7 +147,7 @@
         },
         {
           "id": "rd_subtotal_2",
-          "label": "Show Subtotal",
+          "label": "Subtotal Row Dimension 2",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -223,7 +223,7 @@
         },
         {
           "id": "rd_subtotal_3",
-          "label": "Show Subtotal Row Dimension 3",
+          "label": "Subtotal Row Dimension 3",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -299,7 +299,7 @@
         },
         {
           "id": "rd_subtotal_4",
-          "label": "Show Subtotal Row Dimension 4",
+          "label": "Subtotal Row Dimension 4",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -375,7 +375,7 @@
         },
         {
           "id": "rd_subtotal_5",
-          "label": "Show Subtotal Row Dimension 5",
+          "label": "Subtotal Row Dimension 5",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -457,7 +457,7 @@
       "elements": [
         {
           "id": "cd_subtotal_1",
-          "label": "Show Subtotal Column Dimension 1",
+          "label": "Subtotal Column Dimension 1",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -533,7 +533,7 @@
         },
         {
           "id": "cd_subtotal_2",
-          "label": "Show Subtotal Column Dimension 2",
+          "label": "Subtotal Column Dimension 2",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -609,7 +609,7 @@
         },
         {
           "id": "cd_subtotal_3",
-          "label": "Show Subtotal Row Dimension 3",
+          "label": "Subtotal Row Dimension 3",
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -685,7 +685,7 @@
         },
         {
           "id": "cd_subtotal_4",
-          "label": "Show Subtotal Row Dimension 4", 
+          "label": "Subtotal Row Dimension 4", 
           "type": "CHECKBOX",
           "defaultValue": false
         },
@@ -761,7 +761,7 @@
         },
         {
           "id": "cd_subtotal_5",
-          "label": "Show Subtotal Column Dimension 5",
+          "label": "Subtotal Column Dimension 5",
           "type": "CHECKBOX",
           "defaultValue": false
         },
