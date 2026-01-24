@@ -548,8 +548,15 @@ function renderBodyMetricColumn(tbody, tree, config) {
                         return;
                     }
                     config.metrics.forEach((m, i) => {
-                        const val = getAggregatedValue(aggregatedMetrics[i], 'SUM');
-                        subtotalRow.insertCell().textContent = typeof val === 'number' ? val.toLocaleString() : '-';
+                        const metricAgg = config.metricSubtotalAggs[i] || 'NONE';
+                        let val = 0;
+                        if (metricAgg === 'NONE') {
+                            val = '-';
+                        } else {
+                            val = getAggregatedValue(aggregatedMetrics[i], metricAgg);
+                            val = typeof val === 'number' ? val.toLocaleString() : '-';
+                        }
+                        subtotalRow.insertCell().textContent = val;
                     });
                 });
             }
@@ -591,7 +598,16 @@ function drawViz(data) {
         metrics: fields.metrics || [],
         rowSettings: [],
         colSettings: [],
+        metricSubtotalAggs: [],
     };
+    
+    // Load per-metric subtotal aggregation options (up to 10 metrics)
+    for (let i = 0; i < 10; i++) {
+        config.metricSubtotalAggs.push(
+            getStyleValue(style, `metric_subtotal_agg_${i + 1}`, 'NONE')
+        );
+    }
+    
     for (let i = 0; i < 5; i++) {
         // Check if "Use Defaults" is enabled for this dimension
         const rdUseDefaults = getStyleValue(style, `rd_use_defaults_${i + 1}`, true);
