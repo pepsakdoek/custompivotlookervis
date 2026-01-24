@@ -25,3 +25,14 @@ td {
   margin-top: 6px;
   color: #666;
 }
+
+/* 
+  Configuration structure:
+  1. Pivot Controls - Measure display options
+  2. Row Dimension Defaults - Quick toggles for row dimensions (all default to ON)
+  3. Column Dimension Defaults - Quick toggles for column dimensions (all default to ON)
+  4. Row Dimension Settings - Detailed sorting/subtotal config (scroll down to access)
+  5. Column Dimension Settings - Detailed sorting/subtotal config (scroll down to access)
+  
+  When "Use Defaults" is checked for a dimension, all its detailed settings below are ignored.
+*/

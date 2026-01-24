@@ -66,6 +66,78 @@
       ]
     },
     {
+      "id": "rowDimensionDefaults",
+      "label": "Row Dimension Defaults",
+      "elements": [
+        {
+          "id": "rd_use_defaults_1",
+          "label": "Use Defaults for Row Dimension 1",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "rd_use_defaults_2",
+          "label": "Use Defaults for Row Dimension 2",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "rd_use_defaults_3",
+          "label": "Use Defaults for Row Dimension 3",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "rd_use_defaults_4",
+          "label": "Use Defaults for Row Dimension 4",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "rd_use_defaults_5",
+          "label": "Use Defaults for Row Dimension 5",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        }
+      ]
+    },
+    {
+      "id": "columnDimensionDefaults",
+      "label": "Column Dimension Defaults",
+      "elements": [
+        {
+          "id": "cd_use_defaults_1",
+          "label": "Use Defaults for Column Dimension 1",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "cd_use_defaults_2",
+          "label": "Use Defaults for Column Dimension 2",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "cd_use_defaults_3",
+          "label": "Use Defaults for Column Dimension 3",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "cd_use_defaults_4",
+          "label": "Use Defaults for Column Dimension 4",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        },
+        {
+          "id": "cd_use_defaults_5",
+          "label": "Use Defaults for Column Dimension 5",
+          "type": "CHECKBOX",
+          "defaultValue": true
+        }
+      ]
+    },
+    {
       "id": "rowDimSettings",
       "label": "Row Dimension Settings",
       "elements": [
