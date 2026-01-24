@@ -66,6 +66,412 @@
       ]
     },
     {
+      "id": "metricFormatting",
+      "label": "Metric Formatting",
+      "elements": [
+        {
+          "id": "metric_format_1",
+          "label": "Metric 1 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_2",
+          "label": "Metric 2 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_3",
+          "label": "Metric 3 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_4",
+          "label": "Metric 4 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_5",
+          "label": "Metric 5 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_6",
+          "label": "Metric 6 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_7",
+          "label": "Metric 7 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_8",
+          "label": "Metric 8 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_9",
+          "label": "Metric 9 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        },
+        {
+          "id": "metric_format_10",
+          "label": "Metric 10 Format",
+          "type": "SELECT_SINGLE",
+          "defaultValue": "DEFAULT",
+          "options": [
+            {
+              "label": "Default",
+              "value": "DEFAULT"
+            },
+            {
+              "label": "Compact (1.2k, 2.3m, 1.4b)",
+              "value": "COMPACT"
+            },
+            {
+              "label": "#,###",
+              "value": "NUMBER_0"
+            },
+            {
+              "label": "#,###.0",
+              "value": "NUMBER_1"
+            },
+            {
+              "label": "#,###.00",
+              "value": "NUMBER_2"
+            },
+            {
+              "label": "0%",
+              "value": "PERCENT_0"
+            },
+            {
+              "label": "0.0%",
+              "value": "PERCENT_1"
+            },
+            {
+              "label": "0.00%",
+              "value": "PERCENT_2"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "metricSubtotals",
       "label": "Metric Subtotal Aggregation",
       "elements": [

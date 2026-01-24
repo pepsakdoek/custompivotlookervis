@@ -77,6 +77,49 @@ function getAggregatedValue(metric, aggType) {
             return metric.sum;
     }
 }
+
+function formatMetricValue(value, formatType) {
+    if (value === null || value === undefined || value === '-') return '-';
+    
+    const num = parseFloat(value);
+    if (isNaN(num)) return '-';
+    
+    switch (formatType) {
+        case 'COMPACT':
+            return formatCompact(num);
+        case 'NUMBER_0':
+            return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        case 'NUMBER_1':
+            return num.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        case 'NUMBER_2':
+            return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        case 'PERCENT_0':
+            return (num * 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '%';
+        case 'PERCENT_1':
+            return (num * 100).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+        case 'PERCENT_2':
+            return (num * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+        case 'DEFAULT':
+        default:
+            return num.toLocaleString();
+    }
+}
+
+function formatCompact(num) {
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? '-' : '';
+    
+    if (absNum >= 1e9) {
+        return sign + (absNum / 1e9).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 }).replace(/\.?0+$/, '') + 'b';
+    } else if (absNum >= 1e6) {
+        return sign + (absNum / 1e6).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 }).replace(/\.?0+$/, '') + 'm';
+    } else if (absNum >= 1e3) {
+        return sign + (absNum / 1e3).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 }).replace(/\.?0+$/, '') + 'k';
+    } else {
+        return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+}
+
 function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg) {
     const leafColKey = colDims.join('||');
     colKeys.add(leafColKey);
@@ -494,7 +537,9 @@ function renderBodyMetricColumn(tbody, tree, config) {
                     }
                     config.metrics.forEach((m, i) => {
                         const val = getAggregatedValue(metricValues[i], 'SUM');
-                        tr.insertCell().textContent = typeof val === 'number' ? val.toLocaleString() : '-';
+                        const formatType = config.metricFormats[i] || 'DEFAULT';
+                        const formatted = formatMetricValue(val, formatType);
+                        tr.insertCell().textContent = formatted;
                     });
                 });
             } else {
@@ -554,7 +599,8 @@ function renderBodyMetricColumn(tbody, tree, config) {
                             val = '-';
                         } else {
                             val = getAggregatedValue(aggregatedMetrics[i], metricAgg);
-                            val = typeof val === 'number' ? val.toLocaleString() : '-';
+                            const formatType = config.metricFormats[i] || 'DEFAULT';
+                            val = formatMetricValue(val, formatType);
                         }
                         subtotalRow.insertCell().textContent = val;
                     });
@@ -598,8 +644,16 @@ function drawViz(data) {
         metrics: fields.metrics || [],
         rowSettings: [],
         colSettings: [],
+        metricFormats: [],
         metricSubtotalAggs: [],
     };
+    
+    // Load metric formatting options (up to 10 metrics)
+    for (let i = 0; i < 10; i++) {
+        config.metricFormats.push(
+            getStyleValue(style, `metric_format_${i + 1}`, 'DEFAULT')
+        );
+    }
     
     // Load per-metric subtotal aggregation options (up to 10 metrics)
     for (let i = 0; i < 10; i++) {
