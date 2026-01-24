@@ -36,6 +36,18 @@
   ],
   "style": [
     {
+      "id": "grandTotalSettings",
+      "label": "Grand Total",
+      "elements": [
+        {
+          "id": "showGrandTotal",
+          "label": "Show Grand Total",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        }
+      ]
+    },
+    {
       "id": "pivotControls",
       "label": "Pivot Controls",
       "elements": [
