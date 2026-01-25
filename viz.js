@@ -38,24 +38,60 @@ function getStyleValue(style, id, defaultValue) {
 // Enhanced aggregation to support SUM, AVG, etc.
 function aggregateMetrics(existing, addition, metrics) {
     if (!existing) {
-        // Initialize with all required aggregation stats for each metric value
-        return addition.map(val => ({
-            sum: val,
-            count: 1,
-            min: val,
-            max: val,
-            distinctValues: new Set([val])
-        }));
+        // If this is the first run, initialize based on the `metrics` array
+        // to ensure `existing` always has the correct length from the start.
+        return metrics.map((_, i) => {
+            const val = addition[i];
+            // Check if a value was actually provided for this metric index
+            if (val === undefined || val === null) {
+                // No value, so initialize with empty/zero stats
+                return { sum: 0, count: 0, min: Infinity, max: -Infinity, distinctValues: new Set() };
+            }
+            // A value exists, so create the initial stats object
+            return {
+                sum: val,
+                count: 1,
+                min: val,
+                max: val,
+                distinctValues: new Set([val])
+            };
+        });
     }
+
+    // On subsequent runs, loop through all configured metrics
     metrics.forEach((metric, i) => {
-        const val = addition[i] || 0;
-        const stats = existing[i];
+        const val = addition[i];
+
+        // If no value is provided for this metric in the current data row, skip it.
+        if (val === undefined || val === null) {
+            return; // Equivalent to 'continue' in a forEach
+        }
+
+        let stats = existing[i];
+
+        // This is the key change: If no stats object exists for this metric, create it.
+        // This handles the case you described.
+        if (!stats) {
+            stats = { sum: 0, count: 0, min: Infinity, max: -Infinity, distinctValues: new Set() };
+            existing[i] = stats;
+        }
+
+        // Now, safely update the stats
         stats.sum += val;
         stats.count += 1;
-        if (val < stats.min) stats.min = val;
-        if (val > stats.max) stats.max = val;
+
+        // On the first actual value, min/max are the value itself.
+        if (stats.count === 1) {
+            stats.min = val;
+            stats.max = val;
+        } else {
+            if (val < stats.min) stats.min = val;
+            if (val > stats.max) stats.max = val;
+        }
+
         stats.distinctValues.add(val);
     });
+
     return existing;
 }
 
@@ -839,15 +875,184 @@ function renderBodyMetricRow(tbody, tree, config) {
     }
 }
 
+function renderBodyMeasureFirstColumn(tbody, tree, config) {
+    function recursiveRender(node, path) {
+        const sortConfig = config.rowSettings[node.level + 1];
+        let sortedChildren = Object.values(node.children);
+        if (sortConfig) {
+            // TODO : Sorting
+        }
+        sortedChildren.forEach(childNode => {
+            const newPath = [...path, childNode.value];
+            const isLeaf = Object.keys(childNode.children).length === 0;
+            
+            // Only render a data row if this is a leaf node
+            if (isLeaf) {
+                const tr = tbody.insertRow();
+                newPath.forEach(val => tr.insertCell().textContent = val);
+                const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
+                for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
+                
+                // Render metric values for this row
+                (tree.colDefs || []).forEach(colDef => {
+                    const metricValues = childNode.metrics[colDef.key];
+                    if (!metricValues) {
+                        tr.insertCell().textContent = '-';
+                        return;
+                    }
+
+                    const colKeyParts = colDef.key.split('||');
+                    const metricName = colKeyParts[0];
+                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+                    const val = getAggregatedValue(metricValues[0], 'SUM');
+                    const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                    const formatted = formatMetricValue(val, formatType);
+                    tr.insertCell().textContent = formatted;
+                });
+            } else {
+                // Not a leaf: recurse into children first
+                recursiveRender(childNode, newPath);
+            }
+            
+            // Render row subtotal - only if config explicitly requests it and this node has children
+            const dimensionLevel = childNode.level;
+            const subtotalConfig = config.rowSettings[dimensionLevel];
+            if (subtotalConfig && subtotalConfig.subtotal === true && Object.keys(childNode.children).length > 0) {
+                // Render subtotal row for this node
+                const subtotalRow = tbody.insertRow();
+                subtotalRow.style.fontWeight = 'bold';
+                // Add dimension labels up to this level, then "Subtotal"
+                for (let i = 0; i < dimensionLevel + 1; i++) {
+                    if (i === dimensionLevel) {
+                        subtotalRow.insertCell().textContent = `Subtotal ${childNode.value}`;
+                    } else {
+                        subtotalRow.insertCell().textContent = '';
+                    }
+                }
+                // Add empty cells for extra dimensions
+                const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
+                for (let i = dimensionLevel + 1; i < rowDimCount; i++) subtotalRow.insertCell();
+                
+                // Render metric values for this subtotal - aggregate from all leaf descendants
+                (tree.colDefs || []).forEach(colDef => {
+                    // Aggregate all leaf descendants' metrics for this column
+                    let aggregatedMetrics = null;
+                    
+                    function collectLeafMetrics(leafNode) {
+                        if (Object.keys(leafNode.children).length === 0) {
+                            // This is a leaf
+                            if (leafNode.metrics && leafNode.metrics[colDef.key]) {
+                                aggregatedMetrics = aggregateMetrics(aggregatedMetrics, 
+                                    leafNode.metrics[colDef.key].map(m => m.sum), 
+                                    [{sum: 0, count: 0}]);
+                            }
+                        } else {
+                            // Recurse to leaves
+                            Object.values(leafNode.children).forEach(child => collectLeafMetrics(child));
+                        }
+                    }
+                    
+                    collectLeafMetrics(childNode);
+                    
+                    if (!aggregatedMetrics) {
+                        subtotalRow.insertCell().textContent = '-';
+                        return;
+                    }
+
+                    const colKeyParts = colDef.key.split('||');
+                    const metricName = colKeyParts[0];
+                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+                    const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
+                    let val = 0;
+                    if (metricAgg === 'NONE') {
+                        val = '-';
+                    } else {
+                        val = getAggregatedValue(aggregatedMetrics[0], metricAgg);
+                        const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                        val = formatMetricValue(val, formatType);
+                    }
+                    subtotalRow.insertCell().textContent = val;
+                });
+            }
+        });
+    }
+    recursiveRender(tree.rowRoot, []);
+    
+    // Render Grand Total row if enabled
+    if (config.showGrandTotal) {
+        const grandTotalRow = tbody.insertRow();
+        grandTotalRow.style.fontWeight = 'bold';
+        
+        // Add "Grand Total" label in the first cell
+        grandTotalRow.insertCell().textContent = 'Grand Total';
+        
+        // Add empty cells for other row dimensions
+        const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
+        for (let i = 1; i < rowDimCount; i++) grandTotalRow.insertCell();
+        
+        // Render metric values for grand total - aggregate all leaf descendants
+        (tree.colDefs || []).forEach(colDef => {
+            // Aggregate all leaf descendants' metrics for this column
+            let aggregatedMetrics = null;
+            
+            function collectAllLeafMetrics(node) {
+                if (Object.keys(node.children).length === 0) {
+                    // This is a leaf
+                    if (node.metrics && node.metrics[colDef.key]) {
+                        aggregatedMetrics = aggregateMetrics(aggregatedMetrics, 
+                            node.metrics[colDef.key].map(m => m.sum), 
+                            [{sum: 0, count: 0}]);
+                    }
+                } else {
+                    // Recurse to leaves
+                    Object.values(node.children).forEach(child => collectAllLeafMetrics(child));
+                }
+            }
+            
+            collectAllLeafMetrics(tree.rowRoot);
+            
+            if (!aggregatedMetrics) {
+                grandTotalRow.insertCell().textContent = '-';
+                return;
+            }
+
+            const colKeyParts = colDef.key.split('||');
+            const metricName = colKeyParts[0];
+            const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+            const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
+            let val = 0;
+            if (metricAgg === 'NONE') {
+                val = '-';
+            } else {
+                val = getAggregatedValue(aggregatedMetrics[0], metricAgg);
+                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                val = formatMetricValue(val, formatType);
+            }
+            grandTotalRow.insertCell().textContent = val;
+        });
+    }
+}
+
 function renderBody(table, tree, config) {
     const tbody = table.createTBody();
     
     switch(config.measureLayout) {
         case 'METRIC_ROW':
+            console.log('Rendering body with METRIC_ROW layout');
             renderBodyMetricRow(tbody, tree, config);
+        case 'MEASURE_FIRST_ROW':
+            console.log('Rendering body with MEASURE_FIRST_ROW layout');
+            break;
+        case 'MEASURE_FIRST_COLUMN':
+            console.log('Rendering body with MEASURE_FIRST_COLUMN layout');
+            renderBodyMeasureFirstColumn(tbody, tree, config);
             break;
         case 'METRIC_COLUMN':
         default:
+            console.log('Rendering body with METRIC_COLUMN layout');
             renderBodyMetricColumn(tbody, tree, config);
             break;
     }
