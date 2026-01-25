@@ -13,15 +13,14 @@ function aggregateMetrics(existing, addition, metrics) {
             // Check if a value was actually provided for this metric index
             if (val === undefined || val === null) {
                 // No value, so initialize with empty/zero stats
-                return { sum: 0, count: 0, min: Infinity, max: -Infinity, distinctValues: new Set() };
+                return { sum: 0, count: 0, min: Infinity, max: -Infinity};
             }
             // A value exists, so create the initial stats object
             return {
                 sum: val,
                 count: 1,
                 min: val,
-                max: val,
-                distinctValues: new Set([val])
+                max: val
             };
         });
     }
@@ -40,7 +39,7 @@ function aggregateMetrics(existing, addition, metrics) {
         // This is the key change: If no stats object exists for this metric, create it.
         // This handles the case you described.
         if (!stats) {
-            stats = { sum: 0, count: 0, min: Infinity, max: -Infinity, distinctValues: new Set() };
+            stats = { sum: 0, count: 0, min: Infinity, max: -Infinity };
             existing[i] = stats;
         }
 
@@ -56,8 +55,6 @@ function aggregateMetrics(existing, addition, metrics) {
             if (val < stats.min) stats.min = val;
             if (val > stats.max) stats.max = val;
         }
-
-        stats.distinctValues.add(val);
     });
 
     return existing;
@@ -70,8 +67,6 @@ function getAggregatedValue(metric, aggType) {
             return metric.count === 0 ? 0 : metric.sum / metric.count;
         case 'COUNT':
             return metric.count;
-        case 'COUNT_DISTINCT':
-            return metric.distinctValues.size;
         case 'MIN':
             return metric.min;
         case 'MAX':
@@ -317,4 +312,67 @@ function getFinalColKeys(node, path, config) {
         });
     }
     return finalKeys;
+}
+
+/**
+ * Shared sorting logic for rows and columns
+ */
+function sortChildren(childrenArray, sortConfig) {
+    if (!sortConfig || (sortConfig.sortType !== 'METRIC' && sortConfig.sortType !== 'DIMENSION')) {
+        return childrenArray;
+    }
+
+    return childrenArray.sort((a, b) => {
+        let valA, valB;
+        if (sortConfig.sortType === 'METRIC') {
+            const mIdx = sortConfig.sortMetricIndex;
+            valA = getAggregatedValue(a.metrics?.[mIdx], sortConfig.sortAgg);
+            valB = getAggregatedValue(b.metrics?.[mIdx], sortConfig.sortAgg);
+        } else {
+            valA = a.value;
+            valB = b.value;
+        }
+        const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
+        if (valA === undefined || valA === null) return 1 * order;
+        if (valB === undefined || valB === null) return -1 * order;
+        return valA < valB ? -1 * order : 1 * order;
+    });
+}
+
+/**
+ * Shared cell rendering to ensure formatting is identical everywhere
+ */
+function renderMetricCell(tr, metricStats, metricIndex, config) {
+    const cell = tr.insertCell();
+    if (!metricStats) {
+        cell.textContent = '-';
+        return;
+    }
+    const val = getAggregatedValue(metricStats, 'SUM');
+    const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+    cell.textContent = formatMetricValue(val, formatType);
+}
+
+/**
+ * Helper to collect and aggregate all metric data from the leaves of a specific node
+ */
+function getAggregatedNodeMetrics(node, colDefKey, config) {
+    let aggregated = null;
+
+    function collect(curr) {
+        if (Object.keys(curr.children).length === 0) {
+            const leafStats = curr.metrics[colDefKey];
+            if (leafStats) {
+                // IMPORTANT: leafStats is an array of metric objects [{sum, count...}, {sum, count...}]
+                // We extract just the sums to pass to our aggregator
+                const sums = leafStats.map(s => s.sum);
+                aggregated = aggregateMetrics(aggregated, sums, config.metrics);
+            }
+        } else {
+            Object.values(curr.children).forEach(child => collect(child));
+        }
+    }
+
+    collect(node);
+    return aggregated;
 }
