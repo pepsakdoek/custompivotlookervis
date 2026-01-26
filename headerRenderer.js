@@ -134,55 +134,61 @@ function renderHeader(table, tree, config) {
         }
 
         case 'METRIC_FIRST_COLUMN': {
-            console.log('Rendering header with METRIC_FIRST_COLUMN new');
-            const colHeaderRowCount = hasColDims ? 2 : 1;
-            console.log('colHeaderRowCount:', colHeaderRowCount);
+            const colHeaderRowCount = (hasColDims ? colDims.length : 0) + 1;
             const headerRows = [];
             for (let i = 0; i < colHeaderRowCount; i++) {
                 headerRows.push(thead.insertRow());
             }
-            console.log('headerRows created:', headerRows); 
-            const lastHeaderRow = headerRows[headerRows.length];
+            const lastHeaderRow = headerRows[headerRows.length - 1];
+
             if (hasColDims) {
-                // Two-row header
                 const firstHeaderRow = headerRows[0];
 
                 // Top-left empty cell
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
+                // -1 for the metric name row
+                topLeft.rowSpan = colHeaderRowCount-1;
                 firstHeaderRow.appendChild(topLeft);
-                console.log('Added top-left empty cell');
 
                 // Metric names in first row
-                const colSpan = tree.colDefs.length || 1;
+                const colSpan = getLeafCount(tree.colRoot);
                 metrics.forEach(m => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
                     th.colSpan = colSpan;
                     firstHeaderRow.appendChild(th);
                 });
-                console.log('Added metric name headers in first row');
 
-                // Row dimension names in second row
+                // Row dimension names in last row
                 rowDims.forEach(d => {
                     const th = document.createElement('th');
                     th.textContent = d.name;
                     lastHeaderRow.appendChild(th);
                 });
-                console.log('Added row dimension headers in second row');
 
-                
+                function build(node, level) {
+                    let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
+                    const targetRow = headerRows[level + 1];
 
-                // Last column dimension values in second row, repeated for each metric
-                if (tree.colDefs && tree.colDefs.length > 0) {
-                    metrics.forEach(() => {
-                        tree.colDefs.forEach(colDef => {
-                            const th = document.createElement('th');
-                            th.textContent = colDef[colDef.length - 1];
-                            lastHeaderRow.appendChild(th);
-                        });
+                    sortedChildren.forEach(child => {
+                        const th = document.createElement('th');
+                        th.textContent = child.value;
+                        th.colSpan = getLeafCount(child);
+                        if (Object.keys(child.children).length === 0 && (level < colDims.length - 1)) {
+                            th.rowSpan = colDims.length - level;
+                        }
+                        targetRow.appendChild(th);
+
+                        if (Object.keys(child.children).length > 0) {
+                            build(child, level + 1);
+                        }
                     });
                 }
+                
+                metrics.forEach(() => {
+                  build(tree.colRoot, 0);
+                });
 
             } else {
                 // One-row header

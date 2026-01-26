@@ -5,10 +5,10 @@ function renderBody(table, tree, config) {
         case 'METRIC_ROW':
             console.log('Rendering body with METRIC_ROW layout');
             renderBodyMetricRow(tbody, tree, config);
-        case 'MEASURE_FIRST_ROW':
+        case 'METRIC_FIRST_ROW':
             console.log('Rendering body with MEASURE_FIRST_ROW layout');
             break;
-        case 'MEASURE_FIRST_COLUMN':
+        case 'METRIC_FIRST_COLUMN':
             console.log('Rendering body with MEASURE_FIRST_COLUMN layout');
             renderBodyMeasureFirstColumn(tbody, tree, config);
             break;
