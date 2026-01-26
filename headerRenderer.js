@@ -130,7 +130,63 @@ function renderHeader(table, tree, config) {
         }
 
         case 'METRIC_FIRST_ROW': {
+            // This logic is rebuilt to correctly align row and column headers on the same row.
+            const totalHeaderRows = hasColDims ? colDims.length : 1;
             
+            const headerRows = [];
+            for (let i = 0; i < totalHeaderRows; i++) {
+                headerRows.push(thead.insertRow());
+            }
+
+            const lastHeaderRow = headerRows[headerRows.length-1];
+
+            // Add "Measure" header first
+            const measureTh = document.createElement('th');
+            measureTh.textContent = 'Measure';
+            lastHeaderRow.appendChild(measureTh);
+
+            // Add row dimension headers
+            rowDims.forEach(d => {
+                const th = document.createElement('th');
+                th.textContent = d.name;
+                lastHeaderRow.appendChild(th);
+            });
+
+            if (hasColDims) {
+                // If there are multiple levels of column headers, create an empty top-left cell.
+                if (totalHeaderRows > 1) {
+                    const topLeft = document.createElement('th');
+                    topLeft.colSpan = rowDims.length + 1; // Span over row dims and Measure.
+                    topLeft.rowSpan = totalHeaderRows - 1;
+                     headerRows[0].appendChild(topLeft);
+                }
+
+                // Build the column dimension header tree.
+                function build(node, level) {
+                    let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
+                    const targetRow = headerRows[level];
+
+                    sortedChildren.forEach(child => {
+                        const th = document.createElement('th');
+                        th.textContent = child.value;
+                        th.colSpan = getLeafCount(child);
+                        // If a branch of the tree is shorter, the last node needs to span downwards.
+                        if (Object.keys(child.children).length === 0 && (level < totalHeaderRows - 1)) {
+                            th.rowSpan = totalHeaderRows - level;
+                        }
+                        targetRow.appendChild(th);
+                        if (Object.keys(child.children).length > 0) build(child, level + 1);
+                    });
+                }
+                build(tree.colRoot, 0);
+
+            } else { // No colDims
+                // Add a "Value" header if there are no column dimensions.
+                const valueTh = document.createElement('th');
+                valueTh.textContent = 'Value';
+                lastHeaderRow.appendChild(valueTh);
+            }
+            break;
         }
 
         case 'METRIC_FIRST_COLUMN': {
