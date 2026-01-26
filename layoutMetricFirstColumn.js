@@ -17,21 +17,19 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
                 
                 // Render metric values for this row
-                (tree.colDefs || []).slice().reverse().forEach(colDef => {
-                    const metricValues = childNode.metrics[colDef.key];
-                    if (!metricValues) {
-                        tr.insertCell().textContent = '-';
-                        return;
-                    }
+                config.metrics.forEach((metric, metricIndex) => {
+                    (tree.colDefs || []).slice().reverse().forEach(colDef => {
+                        const metricValues = childNode.metrics[colDef.key];
 
-                    const colKeyParts = colDef.key.split('||');
-                    const metricName = colKeyParts[0];
-                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
-
-                    const val = getAggregatedValue(metricValues[0], 'SUM');
-                    const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                    const formatted = formatMetricValue(val, formatType);
-                    tr.insertCell().textContent = formatted;
+                        if (!metricValues) {
+                            tr.insertCell().textContent = '-';
+                        } else {
+                            const val = getAggregatedValue(metricValues[0], 'SUM');
+                            const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                            const formatted = formatMetricValue(val, formatType);
+                            tr.insertCell().textContent = formatted;
+                        }
+                    });
                 });
             } else {
                 // Not a leaf: recurse into children first
@@ -58,45 +56,42 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 for (let i = dimensionLevel + 1; i < rowDimCount; i++) subtotalRow.insertCell();
                 
                 // Render metric values for this subtotal - aggregate from all leaf descendants
-                (tree.colDefs || []).forEach(colDef => {
-                    // Aggregate all leaf descendants' metrics for this column
-                    let aggregatedMetrics = null;
-                    
-                    function collectLeafMetrics(leafNode) {
-                        if (Object.keys(leafNode.children).length === 0) {
-                            // This is a leaf
-                            if (leafNode.metrics && leafNode.metrics[colDef.key]) {
-                                aggregatedMetrics = aggregateMetrics(aggregatedMetrics, 
-                                    leafNode.metrics[colDef.key].map(m => m.sum), 
-                                    [{sum: 0, count: 0}]);
+                config.metrics.forEach((metric, metricIndex) => {
+                    (tree.colDefs || []).forEach(colDef => {
+                        // Aggregate all leaf descendants' metrics for this column
+                        let aggregatedMetrics = null;
+                        
+                        function collectLeafMetrics(leafNode) {
+                            if (Object.keys(leafNode.children).length === 0) {
+                                // This is a leaf
+                                if (leafNode.metrics && leafNode.metrics[colDef.key]) {
+                                    aggregatedMetrics = aggregateMetrics(aggregatedMetrics, 
+                                        leafNode.metrics[colDef.key].map(m => m.sum), 
+                                        [{sum: 0, count: 0}]);
+                                }
+                            } else {
+                                // Recurse to leaves
+                                Object.values(leafNode.children).forEach(child => collectLeafMetrics(child));
                             }
-                        } else {
-                            // Recurse to leaves
-                            Object.values(leafNode.children).forEach(child => collectLeafMetrics(child));
                         }
-                    }
-                    
-                    collectLeafMetrics(childNode);
-                    
-                    if (!aggregatedMetrics) {
-                        subtotalRow.insertCell().textContent = '-';
-                        return;
-                    }
-
-                    const colKeyParts = colDef.key.split('||');
-                    const metricName = colKeyParts[0];
-                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
-
-                    const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
-                    let val = 0;
-                    if (metricAgg === 'NONE') {
-                        val = '-';
-                    } else {
-                        val = getAggregatedValue(aggregatedMetrics[0], metricAgg);
-                        const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                        val = formatMetricValue(val, formatType);
-                    }
-                    subtotalRow.insertCell().textContent = val;
+                        
+                        collectLeafMetrics(childNode);
+                        
+                        if (!aggregatedMetrics) {
+                            subtotalRow.insertCell().textContent = '-';
+                        } else {
+                            const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
+                            let val = 0;
+                            if (metricAgg === 'NONE') {
+                                val = '-';
+                            } else {
+                                val = getAggregatedValue(aggregatedMetrics[0], metricAgg);
+                                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                                val = formatMetricValue(val, formatType);
+                            }
+                            subtotalRow.insertCell().textContent = val;
+                        }
+                    });
                 });
             }
         });
