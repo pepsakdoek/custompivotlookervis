@@ -67,11 +67,11 @@
             },
             {
               "label": "Measures First in Columns",
-              "value": "MEASURE_FIRST_COLUMN"
+              "value": "METRIC_FIRST_COLUMN"
             },
             {
               "label": "Measures First in Rows",
-              "value": "MEASURE_FIRST_ROW"
+              "value": "METRIC_FIRST_ROW"
             }
           ]
         }

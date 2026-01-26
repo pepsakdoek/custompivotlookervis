@@ -17,7 +17,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
                 
                 // Render metric values for this row
-                (tree.colDefs || []).forEach(colDef => {
+                (tree.colDefs || []).slice().reverse().forEach(colDef => {
                     const metricValues = childNode.metrics[colDef.key];
                     if (!metricValues) {
                         tr.insertCell().textContent = '-';
