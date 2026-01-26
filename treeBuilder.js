@@ -48,7 +48,6 @@ function buildDataTree(config, data) {
         } 
         else { 
             // METRIC_COLUMN (Standard): Metrics are bundled at the dimension leaf
-            // This is the version that was likely returning 0 because it couldn't find the bundled array
             processNode(tree, rowDims, colDims, metricValues, colKeys, config, config.metrics);
         }
     });

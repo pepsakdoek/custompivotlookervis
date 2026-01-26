@@ -342,15 +342,22 @@ function sortChildren(childrenArray, sortConfig) {
 /**
  * Shared cell rendering to ensure formatting is identical everywhere
  */
-function renderMetricCell(tr, metricStats, metricIndex, config) {
-    const cell = tr.insertCell();
+function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) { // Added optional cellToPopulate
+    let cell;
+    if (cellToPopulate) {
+        cell = cellToPopulate;
+    } else {
+        // If no cell is provided, create a new one in the given table row (tr)
+        cell = tr.insertCell();
+    }
+
     if (!metricStats) {
         cell.textContent = '-';
         return;
     }
-    const val = getAggregatedValue(metricStats, 'SUM');
-    const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-    cell.textContent = formatMetricValue(val, formatType);
+    const val = getAggregatedValue(metricStats, 'SUM'); // Assuming getAggregatedValue is available
+    const formatType = config.metricFormats[metricIndex] || 'DEFAULT'; // Assuming metricFormats is in config
+    cell.textContent = formatMetricValue(val, formatType); // Assuming formatMetricValue is available
 }
 
 /**
