@@ -446,13 +446,13 @@ function buildDataTree(config, data) {
             });
         } 
         else if (measureLayout === 'METRIC_FIRST_ROW' && config.metrics.length > 0) {
-            // MEASURE_FIRST_ROW: Metric Name is the FIRST dimension in the row path
+            // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
             config.metrics.forEach((metric, i) => {
                 processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
         else if (measureLayout === 'METRIC_FIRST_COLUMN' && config.metrics.length > 0) {
-            // MEASURE_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
+            // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
             config.metrics.forEach((metric, i) => {
                 processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);
             });
@@ -958,70 +958,57 @@ function renderHeader(table, tree, config) {
             }
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
-            if (hasColDims) {
-                const firstHeaderRow = headerRows[0];
-
-                // Top-left empty cell
+            // If there are column headers, add a top-left spacer above the row dimension labels.
+            if (colHeaderRowCount > 1) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
-                // -1 for the metric name row
-                topLeft.rowSpan = colHeaderRowCount-1;
-                firstHeaderRow.appendChild(topLeft);
+                topLeft.rowSpan = colHeaderRowCount - 1; // Span all rows except the last one.
+                headerRows[0].appendChild(topLeft);
+            }
+            
+            // Add row dimension headers to the last header row.
+            rowDims.forEach(d => {
+                const th = document.createElement('th');
+                th.textContent = d.name;
+                th.className = 'row-dim-label';
+                lastHeaderRow.appendChild(th);
+            });
 
-                // Metric names in first row
-                const colSpan = getLeafCount(tree.colRoot);
-                metrics.forEach(m => {
-                    const th = document.createElement('th');
-                    th.textContent = m.name;
-                    th.colSpan = colSpan;
-                    firstHeaderRow.appendChild(th);
-                });
-
-                // Row dimension names in last row
-                rowDims.forEach(d => {
-                    const th = document.createElement('th');
-                    th.textContent = d.name;
-                    lastHeaderRow.appendChild(th);
-                });
-
-                function build(node, level) {
-                    let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
-                    const targetRow = headerRows[level + 1];
-
-                    sortedChildren.forEach(child => {
-                        const th = document.createElement('th');
-                        th.textContent = child.value;
-                        th.colSpan = getLeafCount(child);
-                        if (Object.keys(child.children).length === 0 && (level < colDims.length - 1)) {
-                            th.rowSpan = colDims.length - level;
-                        }
-                        targetRow.appendChild(th);
-
-                        if (Object.keys(child.children).length > 0) {
-                            build(child, level + 1);
-                        }
-                    });
-                }
+            // Recursive function to build the column headers.
+            function build(node, level) {
+                // level 0: metrics, level 1+: colDims
+                let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                 
-                metrics.forEach(() => {
-                  build(tree.colRoot, 0);
-                });
-
-            } else {
-                // One-row header
-                // Row dimension names
-                rowDims.forEach(d => {
+                sortedChildren.forEach(child => {
                     const th = document.createElement('th');
-                    th.textContent = d.name;
-                    lastHeaderRow.appendChild(th);
-                });
+                    th.textContent = child.value;
+                    th.colSpan = getLeafCount(child);
 
-                // Metric names
+                    headerRows[level].appendChild(th);
+
+                    if (Object.keys(child.children).length > 0) {
+                        build(child, level + 1);
+                    } else if (hasColDims && level < colDims.length) {
+                        // This is a leaf in a column-dimension branch that is not at the lowest level.
+                        // It needs to span the remaining rows.
+                        th.rowSpan = colDims.length - level + 1;
+                    }
+                });
+            }
+
+            if (Object.keys(tree.colRoot.children).length > 0) {
+                build(tree.colRoot, 0);
+            } else if (metrics.length > 0) {
+                // No colDims, just metrics
                 metrics.forEach(m => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
                     lastHeaderRow.appendChild(th);
                 });
+            } else { // No metrics, no coldims, just have rowdims. Add a value column
+                const th = document.createElement('th');
+                th.textContent = "Value";
+                lastHeaderRow.appendChild(th);
             }
             break;
         }
