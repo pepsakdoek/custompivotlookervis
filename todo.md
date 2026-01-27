@@ -13,7 +13,11 @@ METRIC_ROW:
 * Sorting
 
 METRIC_FIRST_COLUMN:
-* Currently not working - fix totally.
+* BODY-RENDER: It seems there are duplicates of the metrics (it's output 3x - with the current test data)
+* Subtotals are not correct
+* Column Subtotals
+* Grand Total
+* Sorting
 
 METRIC_FIRST_ROW:
 * Metrics are reversed
