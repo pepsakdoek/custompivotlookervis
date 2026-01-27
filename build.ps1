@@ -10,6 +10,7 @@ $files = @(
     "./layoutMetricColumn.js",
     "./layoutMetricRow.js",
     "./layoutMetricFirstColumn.js",
+    "./layoutMetricFirstRow.js"
     "./headerRenderer.js",
     "./main.js"
 )

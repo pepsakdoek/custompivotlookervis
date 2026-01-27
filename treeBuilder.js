@@ -34,14 +34,14 @@ function buildDataTree(config, data) {
                 processNode(tree, [...rowDims, metric.name], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'MEASURE_FIRST_ROW' && config.metrics.length > 0) {
-            // MEASURE_FIRST_ROW: Metric Name is the FIRST dimension in the row path
+        else if (measureLayout === 'METRIC_FIRST_ROW' && config.metrics.length > 0) {
+            // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
             config.metrics.forEach((metric, i) => {
                 processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'MEASURE_FIRST_COLUMN' && config.metrics.length > 0) {
-            // MEASURE_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
+        else if (measureLayout === 'METRIC_FIRST_COLUMN' && config.metrics.length > 0) {
+            // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
             config.metrics.forEach((metric, i) => {
                 processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);
             });

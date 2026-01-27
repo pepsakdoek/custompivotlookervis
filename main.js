@@ -7,6 +7,7 @@ function renderBody(table, tree, config) {
             renderBodyMetricRow(tbody, tree, config);
         case 'METRIC_FIRST_ROW':
             console.log('Rendering body with MEASURE_FIRST_ROW layout');
+            renderBodyMetricFirstRow(tbody, tree, config);
             break;
         case 'METRIC_FIRST_COLUMN':
             console.log('Rendering body with MEASURE_FIRST_COLUMN layout');
