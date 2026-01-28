@@ -45,7 +45,8 @@ function drawViz(data) {
         colSettings: [],
         metricFormats: [],
         metricSubtotalAggs: [],
-        showGrandTotal: getStyleValue(style, 'showGrandTotal', false),
+        showRowGrandTotal: getStyleValue(style, 'showRowGrandTotal', false),
+        showColumnGrandTotal: getStyleValue(style, 'showColumnGrandTotal', false),
     };
     
     // Load metric formatting options (up to 10 metrics)

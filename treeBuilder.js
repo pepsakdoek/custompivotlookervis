@@ -64,3 +64,45 @@ function buildDataTree(config, data) {
     
     return tree;
 }
+
+function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg) {
+    const leafColKey = colDims.join('||');
+    colKeys.add(leafColKey);
+    
+    // PHASE 1: Store only at leaf nodes (no recursion)
+    // Store in rowRoot with full row path as leaf
+    let rowNode = tree.rowRoot;
+    rowDims.forEach((dimValue, i) => {
+        if (!rowNode.children[dimValue]) {
+            rowNode.children[dimValue] = {
+                value: dimValue,
+                level: i,
+                children: {},
+                metrics: {}
+            };
+        }
+        rowNode = rowNode.children[dimValue];
+    });
+    
+    // Store metrics only at the leaf row node
+    if (!rowNode.metrics) rowNode.metrics = {};
+    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg);
+    
+    // PHASE 1: Build column hierarchy (same as before - needed for sorting)
+    let colNode = tree.colRoot;
+    if (!colNode.metrics) colNode.metrics = null;
+    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+    colDims.forEach((dimValue, i) => {
+        if (!colNode.children[dimValue]) {
+            colNode.children[dimValue] = {
+                value: dimValue,
+                level: i,
+                children: {},
+                metrics: null
+            };
+        }
+        colNode = colNode.children[dimValue];
+        if (!colNode.metrics) colNode.metrics = null;
+        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+    });
+}

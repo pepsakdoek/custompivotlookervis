@@ -58,8 +58,16 @@ function renderHeader(table, tree, config) {
                     });
                 }
                 build(tree.colRoot, 0);
+
+                if (config.showRowGrandTotal) {
+                    const grandTotalTh = document.createElement('th');
+                    grandTotalTh.textContent = 'Grand Total';
+                    grandTotalTh.colSpan = metrics.length;
+                    grandTotalTh.rowSpan = colDims.length;
+                    headerRows[0].appendChild(grandTotalTh);
+                }
             }
-            
+
             const colDefs = hasColDims ? (tree.colDefs || []) : [[]];
             colDefs.forEach(() => {
                 metrics.forEach(m => {
@@ -68,6 +76,17 @@ function renderHeader(table, tree, config) {
                     lastHeaderRow.appendChild(th);
                 });
             });
+
+            if (config.showRowGrandTotal) {
+                metrics.forEach(m => {
+                    const th = document.createElement('th');
+                    th.textContent = m.name;
+                    if (!hasColDims) {
+                        th.textContent = 'Grand Total ' + m.name;
+                    }
+                    lastHeaderRow.appendChild(th);
+                });
+            }
             break;
         }
 

@@ -1,6 +1,14 @@
 function renderBodyMetricColumn(tbody, tree, config) {
 
+    // let rowSubtotalMetrics = {};
+    // let rowGrandTotalMetrics = {};
+    // config.metrics.forEach((m, i) => {
+    //     rowGrandTotalMetrics[m.name] = 0;
+    // });
+
+
     function renderTotalsRow(node, isGrandTotal) {
+        // This is the Subtotal ROW for the COLUMNS
         const tr = tbody.insertRow();
         tr.style.fontWeight = 'bold';
 
@@ -35,16 +43,39 @@ function renderBodyMetricColumn(tbody, tree, config) {
 
             if (isLeaf) {
                 const tr = tbody.insertRow();
+
                 newPath.forEach(val => tr.insertCell().textContent = val);
                 const rowDimCount = config.rowDims?.length || 0;
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
 
+                let rowTotals = {};
+                if (config.showRowGrandTotal) {
+                    config.metrics.forEach(m => {
+                        rowTotals[m.name] = [];
+                    });
+                }
+
                 (tree.colDefs || []).forEach(colDef => {
                     const stats = childNode.metrics[colDef.key];
                     config.metrics.forEach((m, i) => {
-                        renderMetricCell(tr, stats ? stats[i] : null, i, config);
+                        const cellValue = stats ? stats[i] : null;
+                        renderMetricCell(tr, cellValue, i, config);
+                        if (config.showRowGrandTotal && cellValue !== null) {
+                            rowTotals[m.name].push(cellValue);
+                        }
                     });
                 });
+
+                if (config.showRowGrandTotal) {
+                    config.metrics.forEach((m, i) => {
+                        const combinedStats = aggregateMetricStats(rowTotals[m.name]);
+                        const aggType = config.metricSubtotalAggs[i] || 'SUM';
+                        console.log('Calculating row grand total for metric', m.name, 'with aggType', aggType, 'and combinedStats', combinedStats);
+                        const cell = tr.insertCell();
+                        const val = getAggregatedValue(combinedStats, aggType);
+                        cell.textContent = formatMetricValue(val, config.metricFormats[i]);
+                    });
+                }
             } else {
                 recursiveRender(childNode, newPath);
 
@@ -56,9 +87,10 @@ function renderBodyMetricColumn(tbody, tree, config) {
             }
         });
     }
+
     recursiveRender(tree.rowRoot, []);
 
-    if (config.showGrandTotal) {
+    if (config.showColumnGrandTotal) {
         renderTotalsRow(tree.rowRoot, true);
     }
 }

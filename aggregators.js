@@ -60,6 +60,22 @@ function aggregateMetrics(existing, addition, metrics) {
     return existing;
 }
 
+function aggregateMetricStats(statsArray) {
+    const filteredStats = statsArray.filter(s => s && s.count > 0);
+    if (filteredStats.length === 0) {
+        // Return a zeroed-out stats object that won't affect calculations
+        return { sum: 0, count: 0, min: Infinity, max: -Infinity };
+    }
+
+    return filteredStats.reduce((acc, stats) => {
+        acc.sum += stats.sum;
+        acc.count += stats.count;
+        acc.min = Math.min(acc.min, stats.min);
+        acc.max = Math.max(acc.max, stats.max);
+        return acc;
+    }, { sum: 0, count: 0, min: Infinity, max: -Infinity });
+}
+
 function getAggregatedValue(metric, aggType) {
     if (!metric) return 0;
     switch (aggType) {
@@ -119,47 +135,7 @@ function formatCompact(num) {
     }
 }
 
-function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg) {
-    const leafColKey = colDims.join('||');
-    colKeys.add(leafColKey);
-    
-    // PHASE 1: Store only at leaf nodes (no recursion)
-    // Store in rowRoot with full row path as leaf
-    let rowNode = tree.rowRoot;
-    rowDims.forEach((dimValue, i) => {
-        if (!rowNode.children[dimValue]) {
-            rowNode.children[dimValue] = {
-                value: dimValue,
-                level: i,
-                children: {},
-                metrics: {}
-            };
-        }
-        rowNode = rowNode.children[dimValue];
-    });
-    
-    // Store metrics only at the leaf row node
-    if (!rowNode.metrics) rowNode.metrics = {};
-    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg);
-    
-    // PHASE 1: Build column hierarchy (same as before - needed for sorting)
-    let colNode = tree.colRoot;
-    if (!colNode.metrics) colNode.metrics = null;
-    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
-    colDims.forEach((dimValue, i) => {
-        if (!colNode.children[dimValue]) {
-            colNode.children[dimValue] = {
-                value: dimValue,
-                level: i,
-                children: {},
-                metrics: null
-            };
-        }
-        colNode = colNode.children[dimValue];
-        if (!colNode.metrics) colNode.metrics = null;
-        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
-    });
-}
+
 
 function calculateSubtotals(tree, config, metricsForAgg, colKeys) {
     // PHASE 2: Calculate subtotals from leaf nodes only
@@ -364,16 +340,12 @@ function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) 
  * Helper to collect and aggregate all metric data from the leaves of a specific node
  */
 function getAggregatedNodeMetrics(node, colDefKey, config) {
-    let aggregated = null;
+    let aggregatedStatsArray = []; // Array to hold all leaf stat arrays
 
     function collect(curr) {
-        if (Object.keys(curr.children).length === 0) {
-            const leafStats = curr.metrics[colDefKey];
-            if (leafStats) {
-                // IMPORTANT: leafStats is an array of metric objects [{sum, count...}, {sum, count...}]
-                // We extract just the sums to pass to our aggregator
-                const sums = leafStats.map(s => s.sum);
-                aggregated = aggregateMetrics(aggregated, sums, config.metrics);
+        if (Object.keys(curr.children).length === 0) { // isLeaf
+            if (curr.metrics[colDefKey]) {
+                aggregatedStatsArray.push(curr.metrics[colDefKey]);
             }
         } else {
             Object.values(curr.children).forEach(child => collect(child));
@@ -381,5 +353,25 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
     }
 
     collect(node);
-    return aggregated;
+
+    if (aggregatedStatsArray.length === 0) {
+        return null;
+    }
+    
+    // We now have an array of arrays of stats objects.
+    // e.g., [[metric1_stats_leaf1, metric2_stats_leaf1], [metric1_stats_leaf2, metric2_stats_leaf2]]
+    // We need to aggregate this into a single array of stats objects: [metric1_total_stats, metric2_total_stats]
+
+    // Let's initialize the result array for the total stats of each metric
+    const result = config.metrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+
+    // For each metric...
+    for (let i = 0; i < config.metrics.length; i++) {
+        // ...create an array of stats for just that metric from all leaves
+        const statsForOneMetric = aggregatedStatsArray.map(leafStatsArray => leafStatsArray[i]);
+        // ...and aggregate them.
+        result[i] = aggregateMetricStats(statsForOneMetric);
+    }
+
+    return result;
 }

@@ -40,8 +40,14 @@
       "label": "Grand Total",
       "elements": [
         {
-          "id": "showGrandTotal",
-          "label": "Show Grand Total",
+          "id": "showRowGrandTotal",
+          "label": "Show Row Grand Total",
+          "type": "CHECKBOX",
+          "defaultValue": false
+        },
+        {
+          "id": "showColumnGrandTotal",
+          "label": "Show Column Grand Total",
           "type": "CHECKBOX",
           "defaultValue": false
         }
