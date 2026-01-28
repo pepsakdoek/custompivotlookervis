@@ -30,6 +30,15 @@
             "min": 1,
             "max": 10
           }
+        },
+        {
+          "id": "metricsForCalcs",
+          "label": "Metrics for custom aggregation calculations",
+          "type": "METRIC",
+          "options": {
+            "min": 0,
+            "max": 10
+          }
         }
       ]
     }
@@ -496,282 +505,63 @@
         {
           "id": "metric_subtotal_agg_1",
           "label": "Metric 1 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_2",
           "label": "Metric 2 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_3",
           "label": "Metric 3 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_4",
           "label": "Metric 4 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
+
         },
         {
           "id": "metric_subtotal_agg_5",
           "label": "Metric 5 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_6",
           "label": "Metric 6 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_7",
           "label": "Metric 7 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_8",
           "label": "Metric 8 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_9",
           "label": "Metric 9 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         },
         {
           "id": "metric_subtotal_agg_10",
           "label": "Metric 10 Subtotal",
-          "type": "SELECT_SINGLE",
-          "defaultValue": "NONE",
-          "options": [
-            {
-              "label": "None",
-              "value": "NONE"
-            },
-            {
-              "label": "Sum",
-              "value": "SUM"
-            },
-            {
-              "label": "Average",
-              "value": "AVG"
-            },
-            {
-              "label": "Min",
-              "value": "MIN"
-            },
-            {
-              "label": "Max",
-              "value": "MAX"
-            }
-          ]
+          "type": "TEXTINPUT",
+          "defaultValue": "SUM"
         }
       ]
     },
