@@ -1,7 +1,6 @@
 TODO list:
 
 METRIC_COLUMN:
-* Column Subtotals
 * Sorting
 
 METRIC_ROW:

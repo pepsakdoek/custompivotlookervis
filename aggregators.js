@@ -281,7 +281,7 @@ function getFinalColKeys(node, path, config) {
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
-        console.log('Creating subtotal colDef for path:', path);
+        debugLog('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),
             isSubtotal: true,

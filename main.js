@@ -3,26 +3,35 @@ function renderBody(table, tree, config) {
     
     switch(config.measureLayout) {
         case 'METRIC_ROW':
-            console.log('Rendering body with METRIC_ROW layout');
+            debugLog('Rendering body with METRIC_ROW layout');
             renderBodyMetricRow(tbody, tree, config);
         case 'METRIC_FIRST_ROW':
-            console.log('Rendering body with MEASURE_FIRST_ROW layout');
+            debugLog('Rendering body with MEASURE_FIRST_ROW layout');
             renderBodyMetricFirstRow(tbody, tree, config);
             break;
         case 'METRIC_FIRST_COLUMN':
-            console.log('Rendering body with MEASURE_FIRST_COLUMN layout');
+            debugLog('Rendering body with MEASURE_FIRST_COLUMN layout');
             renderBodyMeasureFirstColumn(tbody, tree, config);
             break;
         case 'METRIC_COLUMN':
         default:
-            console.log('Rendering body with METRIC_COLUMN layout');
+            debugLog('Rendering body with METRIC_COLUMN layout');
             renderBodyMetricColumn(tbody, tree, config);
             break;
     }
 }
 
+function debugLog(...args) {
+    if (devMode) {
+        console.log(...args);
+    }
+}
+const devMode = true;
+
+
 function drawViz(data) {
-    console.log('drawViz called with data:', data);
+
+    debugLog('drawViz called with data:', data);
     document.body.innerHTML = '';
     const container = document.createElement('div');
     container.style.fontFamily = data.theme.themeFontFamily;
@@ -33,8 +42,8 @@ function drawViz(data) {
         container.textContent = 'No data to display.';
         return;
     }
-    console.log('Data tables.DEFAULT:', data.tables.DEFAULT);
-    console.log('Fields:', data.fields);
+    debugLog('Data tables.DEFAULT:', data.tables.DEFAULT);
+    debugLog('Fields:', data.fields);
     const {style,fields,tables,theme} = data;
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
@@ -85,7 +94,7 @@ function drawViz(data) {
         });
     }
     const tree = buildDataTree(config, tables.DEFAULT);
-    console.log('Built tree:', tree);
+    debugLog('Built tree:', tree);
     const table = document.createElement('table');
     table.className = 'pivot-table';
     container.appendChild(table);
