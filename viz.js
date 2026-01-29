@@ -362,6 +362,58 @@ function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) 
     cell.textContent = formatMetricValue(val, formatType); // Assuming formatMetricValue is available
 }
 
+function getCustomAggregatedValue(aggString, metricStats, config) {
+    if (typeof aggString !== 'string') return null;
+    let expression = aggString.toUpperCase().trim();
+
+    if (expression === 'NONE') {
+        return '';
+    }
+
+    const numMetrics = config.metrics.length;
+    const numMetricsForCalcs = config.metricsForCalcs.length;
+
+    // Regex to find SUM(M1), AVG(CM2), etc.
+    const tokenRegex = /(SUM|AVG|COUNT|MIN|MAX)\((M|CM)([0-9]+)\)/g;
+
+    expression = expression.replace(tokenRegex, (match, aggFunc, metricType, metricIndexStr) => {
+        const metricIndex = parseInt(metricIndexStr, 10) - 1;
+
+        if (metricIndex < 0) return 'NaN';
+
+        let stats;
+        if (metricType === 'M') {
+            if (metricIndex >= numMetrics) return 'NaN';
+            stats = metricStats ? metricStats[metricIndex] : null;
+        } else { // 'CM'
+            if (metricIndex >= numMetricsForCalcs) return 'NaN';
+            stats = metricStats ? metricStats[numMetrics + metricIndex] : null;
+        }
+
+        if (!stats) return '0';
+
+        return getAggregatedValue(stats, aggFunc);
+    });
+
+    // Safe evaluation
+    try {
+        // Updated regex to be more strict. Only allow numbers, operators, and parenthesis.
+        if (!/^[0-9.+\-*/()\s]+$/.test(expression)) {
+            // throw new Error('Invalid characters in expression');
+            // For user-facing element, better to return an error message
+            return 'Error: Invalid expression';
+        }
+        const result = new Function(`return ${expression}`)();
+        if (typeof result !== 'number' || !isFinite(result)) {
+            return 'Error';
+        }
+        return result;
+    } catch (e) {
+        console.error('Error evaluating custom aggregation expression:', expression, e);
+        return 'Error';
+    }
+}
+
 /**
  * Helper to collect and aggregate all metric data from the leaves of a specific node
  */
@@ -388,11 +440,12 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
     // e.g., [[metric1_stats_leaf1, metric2_stats_leaf1], [metric1_stats_leaf2, metric2_stats_leaf2]]
     // We need to aggregate this into a single array of stats objects: [metric1_total_stats, metric2_total_stats]
 
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
     // Let's initialize the result array for the total stats of each metric
-    const result = config.metrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+    const result = allMetrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
 
     // For each metric...
-    for (let i = 0; i < config.metrics.length; i++) {
+    for (let i = 0; i < allMetrics.length; i++) {
         // ...create an array of stats for just that metric from all leaves
         const statsForOneMetric = aggregatedStatsArray.map(leafStatsArray => leafStatsArray[i]);
         // ...and aggregate them.
@@ -402,6 +455,7 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
     return result;
 }
 function buildDataTree(config, data) {
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
     const tree = {
         rowRoot: {
             children: {},
@@ -419,7 +473,10 @@ function buildDataTree(config, data) {
         // Standardizing Looker Studio inputs
         const rowDims = (row.dimensions || []).map(String);
         const colDims = (row.columnDimensions || []).map(String);
-        const metricValues = row.metrics.map(val => {
+        
+        // Correctly combine metrics and metricsForCalcs from the data row
+        const combinedMetricData = [...row.metrics, ...(row.metricsForCalcs || [])];
+        const metricValues = combinedMetricData.map(val => {
             const raw = Array.isArray(val) ? val[0] : val;
             const v = (raw != null) ? parseFloat(raw) : 0;
             return isNaN(v) ? 0 : v;
@@ -429,29 +486,29 @@ function buildDataTree(config, data) {
 
         // --- UPDATED BRANCHING LOGIC ---
         
-        if (measureLayout === 'METRIC_ROW' && config.metrics.length > 0) {
+        if (measureLayout === 'METRIC_ROW' && allMetrics.length > 0) {
             // METRIC_ROW: The Metric Name is appended to the ROW path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 // We pass only the single metric value [metricValues[i]] 
                 // and the single metric config [metric] to processNode
                 processNode(tree, [...rowDims, metric.name], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_ROW' && config.metrics.length > 0) {
+        else if (measureLayout === 'METRIC_FIRST_ROW' && allMetrics.length > 0) {
             // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_COLUMN' && config.metrics.length > 0) {
+        else if (measureLayout === 'METRIC_FIRST_COLUMN' && allMetrics.length > 0) {
             // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);
             });
         } 
         else { 
             // METRIC_COLUMN (Standard): Metrics are bundled at the dimension leaf
-            processNode(tree, rowDims, colDims, metricValues, colKeys, config, config.metrics);
+            processNode(tree, rowDims, colDims, metricValues, colKeys, config, allMetrics);
         }
     });
 
@@ -463,7 +520,7 @@ function buildDataTree(config, data) {
         tree.colDefs = [{ key: '', isSubtotal: false, label: 'Total' }];
     }
     
-    calculateSubtotals(tree, config, config.metrics, colKeys);
+    calculateSubtotals(tree, config, allMetrics, colKeys);
     
     return tree;
 }
@@ -537,9 +594,17 @@ function renderBodyMetricColumn(tbody, tree, config) {
         (tree.colDefs || []).forEach(colDef => {
             const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config);
             config.metrics.forEach((m, i) => {
-                const aggType = config.metricSubtotalAggs[i] || 'SUM';
+                const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                const aggTypeUpper = aggString.toUpperCase().trim();
                 const cell = tr.insertCell();
-                const val = getAggregatedValue(nodeStats ? nodeStats[i] : null, aggType);
+
+                let val;
+                if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                    val = getAggregatedValue(nodeStats ? nodeStats[i] : null, aggTypeUpper || 'SUM');
+                } else {
+                    val = getCustomAggregatedValue(aggString, nodeStats, config);
+                }
+
                 cell.textContent = formatMetricValue(val, config.metricFormats[i]);
             });
         });
@@ -561,29 +626,55 @@ function renderBodyMetricColumn(tbody, tree, config) {
 
                 let rowTotals = {};
                 if (config.showRowGrandTotal) {
-                    config.metrics.forEach(m => {
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+                    allMetrics.forEach(m => {
                         rowTotals[m.name] = [];
                     });
                 }
 
                 (tree.colDefs || []).forEach(colDef => {
                     const stats = childNode.metrics[colDef.key];
-                    config.metrics.forEach((m, i) => {
+                    // Loop through all metrics (primary + forCalcs) to populate rowTotals
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+                    allMetrics.forEach((m, i) => {
                         const cellValue = stats ? stats[i] : null;
-                        renderMetricCell(tr, cellValue, i, config);
+
+                        // Only render cells for the primary metrics
+                        if (i < config.metrics.length) {
+                            renderMetricCell(tr, cellValue, i, config);
+                        }
+                        
                         if (config.showRowGrandTotal && cellValue !== null) {
+                            // Ensure rowTotals is populated for all metrics
                             rowTotals[m.name].push(cellValue);
                         }
                     });
                 });
 
                 if (config.showRowGrandTotal) {
+                    const combinedStats = [];
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+
+                    // Create a single array of combined stats for all metrics
+                    for (let i = 0; i < allMetrics.length; i++) {
+                        const metricName = allMetrics[i].name;
+                        combinedStats.push(aggregateMetricStats(rowTotals[metricName]));
+                    }
+
+                    // Now, calculate and render the grand total for each primary metric
                     config.metrics.forEach((m, i) => {
-                        const combinedStats = aggregateMetricStats(rowTotals[m.name]);
-                        const aggType = config.metricSubtotalAggs[i] || 'SUM';
-                        console.log('Calculating row grand total for metric', m.name, 'with aggType', aggType, 'and combinedStats', combinedStats);
+                        const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                        const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
-                        const val = getAggregatedValue(combinedStats, aggType);
+
+                        let val;
+                        if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                            val = getAggregatedValue(combinedStats[i], aggTypeUpper || 'SUM');
+                        } else {
+                            // Pass the full array of combined stats
+                            val = getCustomAggregatedValue(aggString, combinedStats, config);
+                        }
+
                         cell.textContent = formatMetricValue(val, config.metricFormats[i]);
                     });
                 }
@@ -1159,6 +1250,7 @@ function drawViz(data) {
         rowDims: fields.dimensions || [],
         colDims: fields.columnDimensions || [],
         metrics: fields.metrics || [],
+        metricsForCalcs: fields.metricsForCalcs || [],
         rowSettings: [],
         colSettings: [],
         metricFormats: [],

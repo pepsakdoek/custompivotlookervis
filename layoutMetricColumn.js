@@ -26,9 +26,17 @@ function renderBodyMetricColumn(tbody, tree, config) {
         (tree.colDefs || []).forEach(colDef => {
             const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config);
             config.metrics.forEach((m, i) => {
-                const aggType = config.metricSubtotalAggs[i] || 'SUM';
+                const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                const aggTypeUpper = aggString.toUpperCase().trim();
                 const cell = tr.insertCell();
-                const val = getAggregatedValue(nodeStats ? nodeStats[i] : null, aggType);
+
+                let val;
+                if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                    val = getAggregatedValue(nodeStats ? nodeStats[i] : null, aggTypeUpper || 'SUM');
+                } else {
+                    val = getCustomAggregatedValue(aggString, nodeStats, config);
+                }
+
                 cell.textContent = formatMetricValue(val, config.metricFormats[i]);
             });
         });
@@ -50,29 +58,55 @@ function renderBodyMetricColumn(tbody, tree, config) {
 
                 let rowTotals = {};
                 if (config.showRowGrandTotal) {
-                    config.metrics.forEach(m => {
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+                    allMetrics.forEach(m => {
                         rowTotals[m.name] = [];
                     });
                 }
 
                 (tree.colDefs || []).forEach(colDef => {
                     const stats = childNode.metrics[colDef.key];
-                    config.metrics.forEach((m, i) => {
+                    // Loop through all metrics (primary + forCalcs) to populate rowTotals
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+                    allMetrics.forEach((m, i) => {
                         const cellValue = stats ? stats[i] : null;
-                        renderMetricCell(tr, cellValue, i, config);
+
+                        // Only render cells for the primary metrics
+                        if (i < config.metrics.length) {
+                            renderMetricCell(tr, cellValue, i, config);
+                        }
+                        
                         if (config.showRowGrandTotal && cellValue !== null) {
+                            // Ensure rowTotals is populated for all metrics
                             rowTotals[m.name].push(cellValue);
                         }
                     });
                 });
 
                 if (config.showRowGrandTotal) {
+                    const combinedStats = [];
+                    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+
+                    // Create a single array of combined stats for all metrics
+                    for (let i = 0; i < allMetrics.length; i++) {
+                        const metricName = allMetrics[i].name;
+                        combinedStats.push(aggregateMetricStats(rowTotals[metricName]));
+                    }
+
+                    // Now, calculate and render the grand total for each primary metric
                     config.metrics.forEach((m, i) => {
-                        const combinedStats = aggregateMetricStats(rowTotals[m.name]);
-                        const aggType = config.metricSubtotalAggs[i] || 'SUM';
-                        console.log('Calculating row grand total for metric', m.name, 'with aggType', aggType, 'and combinedStats', combinedStats);
+                        const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                        const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
-                        const val = getAggregatedValue(combinedStats, aggType);
+
+                        let val;
+                        if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                            val = getAggregatedValue(combinedStats[i], aggTypeUpper || 'SUM');
+                        } else {
+                            // Pass the full array of combined stats
+                            val = getCustomAggregatedValue(aggString, combinedStats, config);
+                        }
+
                         cell.textContent = formatMetricValue(val, config.metricFormats[i]);
                     });
                 }

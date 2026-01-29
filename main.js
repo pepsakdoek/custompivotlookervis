@@ -41,6 +41,7 @@ function drawViz(data) {
         rowDims: fields.dimensions || [],
         colDims: fields.columnDimensions || [],
         metrics: fields.metrics || [],
+        metricsForCalcs: fields.metricsForCalcs || [],
         rowSettings: [],
         colSettings: [],
         metricFormats: [],

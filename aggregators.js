@@ -336,6 +336,58 @@ function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) 
     cell.textContent = formatMetricValue(val, formatType); // Assuming formatMetricValue is available
 }
 
+function getCustomAggregatedValue(aggString, metricStats, config) {
+    if (typeof aggString !== 'string') return null;
+    let expression = aggString.toUpperCase().trim();
+
+    if (expression === 'NONE') {
+        return '';
+    }
+
+    const numMetrics = config.metrics.length;
+    const numMetricsForCalcs = config.metricsForCalcs.length;
+
+    // Regex to find SUM(M1), AVG(CM2), etc.
+    const tokenRegex = /(SUM|AVG|COUNT|MIN|MAX)\((M|CM)([0-9]+)\)/g;
+
+    expression = expression.replace(tokenRegex, (match, aggFunc, metricType, metricIndexStr) => {
+        const metricIndex = parseInt(metricIndexStr, 10) - 1;
+
+        if (metricIndex < 0) return 'NaN';
+
+        let stats;
+        if (metricType === 'M') {
+            if (metricIndex >= numMetrics) return 'NaN';
+            stats = metricStats ? metricStats[metricIndex] : null;
+        } else { // 'CM'
+            if (metricIndex >= numMetricsForCalcs) return 'NaN';
+            stats = metricStats ? metricStats[numMetrics + metricIndex] : null;
+        }
+
+        if (!stats) return '0';
+
+        return getAggregatedValue(stats, aggFunc);
+    });
+
+    // Safe evaluation
+    try {
+        // Updated regex to be more strict. Only allow numbers, operators, and parenthesis.
+        if (!/^[0-9.+\-*/()\s]+$/.test(expression)) {
+            // throw new Error('Invalid characters in expression');
+            // For user-facing element, better to return an error message
+            return 'Error: Invalid expression';
+        }
+        const result = new Function(`return ${expression}`)();
+        if (typeof result !== 'number' || !isFinite(result)) {
+            return 'Error';
+        }
+        return result;
+    } catch (e) {
+        console.error('Error evaluating custom aggregation expression:', expression, e);
+        return 'Error';
+    }
+}
+
 /**
  * Helper to collect and aggregate all metric data from the leaves of a specific node
  */
@@ -362,11 +414,12 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
     // e.g., [[metric1_stats_leaf1, metric2_stats_leaf1], [metric1_stats_leaf2, metric2_stats_leaf2]]
     // We need to aggregate this into a single array of stats objects: [metric1_total_stats, metric2_total_stats]
 
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
     // Let's initialize the result array for the total stats of each metric
-    const result = config.metrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+    const result = allMetrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
 
     // For each metric...
-    for (let i = 0; i < config.metrics.length; i++) {
+    for (let i = 0; i < allMetrics.length; i++) {
         // ...create an array of stats for just that metric from all leaves
         const statsForOneMetric = aggregatedStatsArray.map(leafStatsArray => leafStatsArray[i]);
         // ...and aggregate them.

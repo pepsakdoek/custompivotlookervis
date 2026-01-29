@@ -1,4 +1,5 @@
 function buildDataTree(config, data) {
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
     const tree = {
         rowRoot: {
             children: {},
@@ -16,7 +17,10 @@ function buildDataTree(config, data) {
         // Standardizing Looker Studio inputs
         const rowDims = (row.dimensions || []).map(String);
         const colDims = (row.columnDimensions || []).map(String);
-        const metricValues = row.metrics.map(val => {
+        
+        // Correctly combine metrics and metricsForCalcs from the data row
+        const combinedMetricData = [...row.metrics, ...(row.metricsForCalcs || [])];
+        const metricValues = combinedMetricData.map(val => {
             const raw = Array.isArray(val) ? val[0] : val;
             const v = (raw != null) ? parseFloat(raw) : 0;
             return isNaN(v) ? 0 : v;
@@ -26,29 +30,29 @@ function buildDataTree(config, data) {
 
         // --- UPDATED BRANCHING LOGIC ---
         
-        if (measureLayout === 'METRIC_ROW' && config.metrics.length > 0) {
+        if (measureLayout === 'METRIC_ROW' && allMetrics.length > 0) {
             // METRIC_ROW: The Metric Name is appended to the ROW path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 // We pass only the single metric value [metricValues[i]] 
                 // and the single metric config [metric] to processNode
                 processNode(tree, [...rowDims, metric.name], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_ROW' && config.metrics.length > 0) {
+        else if (measureLayout === 'METRIC_FIRST_ROW' && allMetrics.length > 0) {
             // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_COLUMN' && config.metrics.length > 0) {
+        else if (measureLayout === 'METRIC_FIRST_COLUMN' && allMetrics.length > 0) {
             // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
-            config.metrics.forEach((metric, i) => {
+            allMetrics.forEach((metric, i) => {
                 processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);
             });
         } 
         else { 
             // METRIC_COLUMN (Standard): Metrics are bundled at the dimension leaf
-            processNode(tree, rowDims, colDims, metricValues, colKeys, config, config.metrics);
+            processNode(tree, rowDims, colDims, metricValues, colKeys, config, allMetrics);
         }
     });
 
@@ -60,7 +64,7 @@ function buildDataTree(config, data) {
         tree.colDefs = [{ key: '', isSubtotal: false, label: 'Total' }];
     }
     
-    calculateSubtotals(tree, config, config.metrics, colKeys);
+    calculateSubtotals(tree, config, allMetrics, colKeys);
     
     return tree;
 }
