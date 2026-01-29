@@ -307,6 +307,7 @@ function getFinalColKeys(node, path, config) {
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+        console.log('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),
             isSubtotal: true,
@@ -417,13 +418,21 @@ function getCustomAggregatedValue(aggString, metricStats, config) {
 /**
  * Helper to collect and aggregate all metric data from the leaves of a specific node
  */
-function getAggregatedNodeMetrics(node, colDefKey, config) {
+function getAggregatedNodeMetrics(node, colDefKey, config, isSubtotalCol) {
     let aggregatedStatsArray = []; // Array to hold all leaf stat arrays
 
     function collect(curr) {
         if (Object.keys(curr.children).length === 0) { // isLeaf
-            if (curr.metrics[colDefKey]) {
-                aggregatedStatsArray.push(curr.metrics[colDefKey]);
+            if (isSubtotalCol) {
+                Object.entries(curr.metrics).forEach(([key, stats]) => {
+                    if (key.startsWith(colDefKey + '||')) {
+                        aggregatedStatsArray.push(stats);
+                    }
+                });
+            } else {
+                 if (curr.metrics[colDefKey]) {
+                    aggregatedStatsArray.push(curr.metrics[colDefKey]);
+                }
             }
         } else {
             Object.values(curr.children).forEach(child => collect(child));
@@ -452,6 +461,33 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
         result[i] = aggregateMetricStats(statsForOneMetric);
     }
 
+    return result;
+}
+
+function getAggregatedNodeMetricsAllCols(node, config) {
+    let allStats = [];
+    function collect(curr) {
+        if (Object.keys(curr.children).length === 0) { // isLeaf
+            Object.values(curr.metrics).forEach(metricArray => {
+                allStats.push(metricArray);
+            });
+        } else {
+            Object.values(curr.children).forEach(child => collect(child));
+        }
+    }
+    collect(node);
+
+    if (allStats.length === 0) return null;
+
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+    const result = allMetrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+
+    for (let i = 0; i < allMetrics.length; i++) {
+        const statsForOneMetric = allStats.map(leafStatsArray => leafStatsArray[i]);
+        if(statsForOneMetric[0] !== undefined) {
+            result[i] = aggregateMetricStats(statsForOneMetric);
+        }
+    }
     return result;
 }
 function buildDataTree(config, data) {
@@ -592,7 +628,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
         }
 
         (tree.colDefs || []).forEach(colDef => {
-            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config);
+            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
             config.metrics.forEach((m, i) => {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';
                 const aggTypeUpper = aggString.toUpperCase().trim();
@@ -608,6 +644,25 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 cell.textContent = formatMetricValue(val, config.metricFormats[i]);
             });
         });
+
+        if (isGrandTotal && config.showRowGrandTotal) {
+            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(tree.rowRoot, config);
+
+            config.metrics.forEach((m, i) => {
+                const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                const cell = tr.insertCell();
+                cell.style.fontWeight = 'bold'; // Grand grand total should be bold
+
+                let val;
+                const aggTypeUpper = aggString.toUpperCase().trim();
+                if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                    val = getAggregatedValue(grandGrandTotalStats ? grandGrandTotalStats[i] : null, aggTypeUpper || 'SUM');
+                } else {
+                    val = getCustomAggregatedValue(aggString, grandGrandTotalStats, config);
+                }
+                cell.textContent = formatMetricValue(val, config.metricFormats[i]);
+            });
+        }
     }
 
     function recursiveRender(node, path) {
@@ -633,7 +688,11 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 }
 
                 (tree.colDefs || []).forEach(colDef => {
-                    const stats = childNode.metrics[colDef.key];
+                    console.log('Processing colDef:', colDef);
+                    const stats = colDef.isSubtotal 
+                        ? getAggregatedNodeMetrics(childNode, colDef.key, config, true) 
+                        : childNode.metrics[colDef.key];
+
                     // Loop through all metrics (primary + forCalcs) to populate rowTotals
                     const allMetrics = [...config.metrics, ...config.metricsForCalcs];
                     allMetrics.forEach((m, i) => {
@@ -644,7 +703,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                             renderMetricCell(tr, cellValue, i, config);
                         }
                         
-                        if (config.showRowGrandTotal && cellValue !== null) {
+                        if (config.showRowGrandTotal && cellValue !== null && !colDef.isSubtotal) {
                             // Ensure rowTotals is populated for all metrics
                             rowTotals[m.name].push(cellValue);
                         }
@@ -666,6 +725,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                         const aggString = config.metricSubtotalAggs[i] || 'SUM';
                         const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
+                        cell.style.fontWeight = 'bold';
 
                         let val;
                         if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
@@ -954,7 +1014,14 @@ function renderHeader(table, tree, config) {
 
     function getLeafCount(node) {
         if (!node || Object.keys(node.children).length === 0) return 1;
-        return Object.values(node.children).reduce((sum, child) => sum + getLeafCount(child), 0);
+
+        let count = Object.values(node.children).reduce((sum, child) => sum + getLeafCount(child), 0);
+        
+        const subtotalConfig = config.colSettings[node.level];
+        if (subtotalConfig && subtotalConfig.subtotal && node.level >= 0) {
+            count += 1; 
+        }
+        return count;
     }
     
     switch (measureLayout) {
@@ -981,17 +1048,30 @@ function renderHeader(table, tree, config) {
 
             if (hasColDims) {
                 const metricMultiplier = metrics.length || 1;
-                function build(node, level) {
+                function build(node, level, path) {
                     let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                     sortedChildren.forEach(child => {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child) * metricMultiplier;
                         headerRows[level].appendChild(th);
-                        if (Object.keys(child.children).length > 0) build(child, level + 1);
+                        if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
+
+                    const subtotalConfig = config.colSettings[node.level];
+                    if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+                        console.log('Creating subtotal header for path:', path);
+                        const th = document.createElement('th');
+                        th.textContent = `Subtotal ${path[path.length - 1]}`;
+                        th.colSpan = metrics.length;
+                        const rowSpan = colDims.length - level;
+                        if (rowSpan > 1) {
+                            th.rowSpan = rowSpan;
+                        }
+                        headerRows[level].appendChild(th);
+                    }
                 }
-                build(tree.colRoot, 0);
+                build(tree.colRoot, 0, []);
 
                 if (config.showRowGrandTotal) {
                     const grandTotalTh = document.createElement('th');

@@ -281,6 +281,7 @@ function getFinalColKeys(node, path, config) {
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+        console.log('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),
             isSubtotal: true,
@@ -391,13 +392,21 @@ function getCustomAggregatedValue(aggString, metricStats, config) {
 /**
  * Helper to collect and aggregate all metric data from the leaves of a specific node
  */
-function getAggregatedNodeMetrics(node, colDefKey, config) {
+function getAggregatedNodeMetrics(node, colDefKey, config, isSubtotalCol) {
     let aggregatedStatsArray = []; // Array to hold all leaf stat arrays
 
     function collect(curr) {
         if (Object.keys(curr.children).length === 0) { // isLeaf
-            if (curr.metrics[colDefKey]) {
-                aggregatedStatsArray.push(curr.metrics[colDefKey]);
+            if (isSubtotalCol) {
+                Object.entries(curr.metrics).forEach(([key, stats]) => {
+                    if (key.startsWith(colDefKey + '||')) {
+                        aggregatedStatsArray.push(stats);
+                    }
+                });
+            } else {
+                 if (curr.metrics[colDefKey]) {
+                    aggregatedStatsArray.push(curr.metrics[colDefKey]);
+                }
             }
         } else {
             Object.values(curr.children).forEach(child => collect(child));
@@ -426,5 +435,32 @@ function getAggregatedNodeMetrics(node, colDefKey, config) {
         result[i] = aggregateMetricStats(statsForOneMetric);
     }
 
+    return result;
+}
+
+function getAggregatedNodeMetricsAllCols(node, config) {
+    let allStats = [];
+    function collect(curr) {
+        if (Object.keys(curr.children).length === 0) { // isLeaf
+            Object.values(curr.metrics).forEach(metricArray => {
+                allStats.push(metricArray);
+            });
+        } else {
+            Object.values(curr.children).forEach(child => collect(child));
+        }
+    }
+    collect(node);
+
+    if (allStats.length === 0) return null;
+
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+    const result = allMetrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+
+    for (let i = 0; i < allMetrics.length; i++) {
+        const statsForOneMetric = allStats.map(leafStatsArray => leafStatsArray[i]);
+        if(statsForOneMetric[0] !== undefined) {
+            result[i] = aggregateMetricStats(statsForOneMetric);
+        }
+    }
     return result;
 }

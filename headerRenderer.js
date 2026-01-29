@@ -20,7 +20,14 @@ function renderHeader(table, tree, config) {
 
     function getLeafCount(node) {
         if (!node || Object.keys(node.children).length === 0) return 1;
-        return Object.values(node.children).reduce((sum, child) => sum + getLeafCount(child), 0);
+
+        let count = Object.values(node.children).reduce((sum, child) => sum + getLeafCount(child), 0);
+        
+        const subtotalConfig = config.colSettings[node.level];
+        if (subtotalConfig && subtotalConfig.subtotal && node.level >= 0) {
+            count += 1; 
+        }
+        return count;
     }
     
     switch (measureLayout) {
@@ -47,17 +54,29 @@ function renderHeader(table, tree, config) {
 
             if (hasColDims) {
                 const metricMultiplier = metrics.length || 1;
-                function build(node, level) {
+                function build(node, level, path) {
                     let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                     sortedChildren.forEach(child => {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child) * metricMultiplier;
                         headerRows[level].appendChild(th);
-                        if (Object.keys(child.children).length > 0) build(child, level + 1);
+                        if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
+
+                    const subtotalConfig = config.colSettings[node.level];
+                    if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+                        const th = document.createElement('th');
+                        th.textContent = `Subtotal ${path[path.length - 1]}`;
+                        th.colSpan = metrics.length;
+                        const rowSpan = colDims.length - level;
+                        if (rowSpan > 1) {
+                            th.rowSpan = rowSpan;
+                        }
+                        headerRows[level].appendChild(th);
+                    }
                 }
-                build(tree.colRoot, 0);
+                build(tree.colRoot, 0, []);
 
                 if (config.showRowGrandTotal) {
                     const grandTotalTh = document.createElement('th');

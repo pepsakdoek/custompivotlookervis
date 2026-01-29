@@ -24,7 +24,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
         }
 
         (tree.colDefs || []).forEach(colDef => {
-            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config);
+            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
             config.metrics.forEach((m, i) => {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';
                 const aggTypeUpper = aggString.toUpperCase().trim();
@@ -40,6 +40,25 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 cell.textContent = formatMetricValue(val, config.metricFormats[i]);
             });
         });
+
+        if (isGrandTotal && config.showRowGrandTotal) {
+            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(tree.rowRoot, config);
+
+            config.metrics.forEach((m, i) => {
+                const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                const cell = tr.insertCell();
+                cell.style.fontWeight = 'bold'; // Grand grand total should be bold
+
+                let val;
+                const aggTypeUpper = aggString.toUpperCase().trim();
+                if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                    val = getAggregatedValue(grandGrandTotalStats ? grandGrandTotalStats[i] : null, aggTypeUpper || 'SUM');
+                } else {
+                    val = getCustomAggregatedValue(aggString, grandGrandTotalStats, config);
+                }
+                cell.textContent = formatMetricValue(val, config.metricFormats[i]);
+            });
+        }
     }
 
     function recursiveRender(node, path) {
@@ -65,7 +84,10 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 }
 
                 (tree.colDefs || []).forEach(colDef => {
-                    const stats = childNode.metrics[colDef.key];
+                    const stats = colDef.isSubtotal 
+                        ? getAggregatedNodeMetrics(childNode, colDef.key, config, true) 
+                        : childNode.metrics[colDef.key];
+
                     // Loop through all metrics (primary + forCalcs) to populate rowTotals
                     const allMetrics = [...config.metrics, ...config.metricsForCalcs];
                     allMetrics.forEach((m, i) => {
@@ -76,7 +98,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                             renderMetricCell(tr, cellValue, i, config);
                         }
                         
-                        if (config.showRowGrandTotal && cellValue !== null) {
+                        if (config.showRowGrandTotal && cellValue !== null && !colDef.isSubtotal) {
                             // Ensure rowTotals is populated for all metrics
                             rowTotals[m.name].push(cellValue);
                         }
@@ -98,6 +120,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                         const aggString = config.metricSubtotalAggs[i] || 'SUM';
                         const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
+                        cell.style.fontWeight = 'bold';
 
                         let val;
                         if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
