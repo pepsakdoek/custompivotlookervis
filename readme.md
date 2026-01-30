@@ -9,7 +9,7 @@ It is limited though, because it's a true community visualisation, so it has a f
 1.  In Looker Studio, click on the button next to the the "Add a chart button" (the Community Visualisastions button)
 2.  Click on "+Explore more"
 3.  Click on "Build your own visualisation".
-4.  In the Manifest path\* field, enter `gs://custompivot/custompivotlookervis` as the path to the community vis.
+4.  In the Manifest path\* field, enter `gs://custompivot` as the path to the community vis. (I'll publish the public branch there, and the dev branch is: `gs://custompivot/custompivotlookervis`)
 5.  Click "Submit"
 
 ## Getting help

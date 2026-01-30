@@ -176,6 +176,14 @@ function renderHeader(table, tree, config) {
                 valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
             }
+
+            if (config.showRowGrandTotal) {
+                const th = document.createElement('th');
+                th.textContent = 'Grand Total';
+                th.classList.add('RGH');
+                th.rowSpan = totalHeaderRows;
+                headerRows[0].appendChild(th);
+            }
             break;
         }
 
@@ -240,6 +248,14 @@ function renderHeader(table, tree, config) {
                 valueTh.textContent = 'Value';
                 valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
+            }
+
+            if (config.showRowGrandTotal) {
+                const th = document.createElement('th');
+                th.textContent = 'Grand Total';
+                th.classList.add('RGH');
+                th.rowSpan = totalHeaderRows;
+                headerRows[0].appendChild(th);
             }
             break;
         }

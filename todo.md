@@ -4,10 +4,9 @@ METRIC_COLUMN:
 * Sorting is wonky, it should use the grand totals to sort on. It looks like it's currently sorting on the first coldim's metrics
 
 METRIC_ROW:
-* Metric Order is reversed
-* Row Subtotals needs to be correct (their metric descriptions are in the correct order)
-* Column Subtotals
-* Grand Total
+* Requires more in depth testing
+* Bugs on column subtotals 
+ * header name for subtotal columns are not implemented
 * Sorting
 
 METRIC_FIRST_COLUMN:
