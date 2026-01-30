@@ -89,6 +89,12 @@
               "value": "METRIC_FIRST_ROW"
             }
           ]
+        },
+        {
+          "id": "advcss",
+          "label": "Add CSS Rules",
+          "type": "TEXTAREA",
+          "defaultValue": ""
         }
       ]
     },
