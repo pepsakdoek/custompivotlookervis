@@ -1594,9 +1594,6 @@ function drawViz(data) {
         styleEl.textContent = advcss;
         document.head.appendChild(styleEl);
     }
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `.RDH, .RDC { text-align: left; } ` + (advcss || '');
-    container.appendChild(styleEl);
 
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
@@ -1662,7 +1659,6 @@ function applyStickyHeaders(table, config, theme) {
     headerRows.forEach(row => {
         const rowRect = row.getBoundingClientRect();
         Array.from(row.cells).forEach(cell => {
-            cell.style.minWidth = cell.getBoundingClientRect().width + 'px';
             cell.style.position = 'sticky';
             cell.style.top = currentTop + 'px';
             cell.style.zIndex = '10';
@@ -1687,7 +1683,6 @@ function applyStickyHeaders(table, config, theme) {
             const cell = cells[i];
             if (logicalColIndex >= stickyColCount) break;
 
-            cell.style.minWidth = cell.getBoundingClientRect().width + 'px';
             cell.style.position = 'sticky';
             cell.style.left = currentLeft + 'px';
             cell.style.backgroundColor = bgColor;
