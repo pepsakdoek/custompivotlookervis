@@ -45,8 +45,8 @@ function renderBodyMetricColumn(tbody, tree, config) {
             });
         });
 
-        if (isGrandTotal && config.showRowGrandTotal) {
-            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(tree.rowRoot, config);
+        if (config.showRowGrandTotal) {
+            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(node, config);
 
             config.metrics.forEach((m, i) => {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';

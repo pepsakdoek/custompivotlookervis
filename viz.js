@@ -668,8 +668,8 @@ function renderBodyMetricColumn(tbody, tree, config) {
             });
         });
 
-        if (isGrandTotal && config.showRowGrandTotal) {
-            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(tree.rowRoot, config);
+        if (config.showRowGrandTotal) {
+            const grandGrandTotalStats = getAggregatedNodeMetricsAllCols(node, config);
 
             config.metrics.forEach((m, i) => {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';
@@ -1419,13 +1419,14 @@ const devMode = true;
 function drawViz(data) {
 
     debugLog('drawViz called with data:', data);
-    const {style,fields,tables,theme} = data;
-    
     document.body.innerHTML = '';
     const container = document.createElement('div');
     container.style.fontFamily = data.theme.themeFontFamily;
     container.style.fontSize = data.theme.themeFontSize;
     document.body.appendChild(container);
+
+    debugLog('Fields:', data.fields);
+    const {style,fields,tables,theme} = data;
 
     const advcss = getStyleValue(style, 'advcss', '');
     if (advcss) {
@@ -1433,14 +1434,6 @@ function drawViz(data) {
         styleEl.textContent = advcss;
         document.head.appendChild(styleEl);
     }
-
-    if (!data.tables || !data.tables.DEFAULT || data.tables.DEFAULT.length === 0) {
-        console.warn('No data found in data.tables.DEFAULT');
-        container.textContent = 'No data to display.';
-        return;
-    }
-    debugLog('Data tables.DEFAULT:', data.tables.DEFAULT);
-    debugLog('Fields:', data.fields);
 
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
