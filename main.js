@@ -74,23 +74,19 @@ function drawViz(data) {
     }
     
     for (let i = 0; i < 5; i++) {
-        // Check if "Use Defaults" is enabled for this dimension
-        const rdUseDefaults = getStyleValue(style, `rd_use_defaults_${i + 1}`, true);
-        const cdUseDefaults = getStyleValue(style, `cd_use_defaults_${i + 1}`, true);
-        
         config.rowSettings.push({
-            subtotal: rdUseDefaults ? false : getStyleValue(style, `rd_subtotal_${i + 1}`, false),
-            sortType: rdUseDefaults ? 'DIMENSION' : getStyleValue(style, `rd_sort_type_${i + 1}`, 'DIMENSION'),
-            sortMetricIndex: rdUseDefaults ? 0 : (parseInt(getStyleValue(style, `rd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
-            sortAgg: rdUseDefaults ? 'SUM' : getStyleValue(style, `rd_sort_agg_${i + 1}`, 'SUM'),
-            sortDir: rdUseDefaults ? 'ASC' : getStyleValue(style, `rd_sort_dir_${i + 1}`, 'ASC'),
+            subtotal: getStyleValue(style, `rd_subtotal_${i + 1}`, false),
+            sortType: getStyleValue(style, `rd_sort_type_${i + 1}`, 'DIMENSION'),
+            sortMetricIndex: (parseInt(getStyleValue(style, `rd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
+            sortAgg: getStyleValue(style, `rd_sort_agg_${i + 1}`, 'SUM'),
+            sortDir: getStyleValue(style, `rd_sort_dir_${i + 1}`, 'ASC'),
         });
         config.colSettings.push({
-            subtotal: cdUseDefaults ? false : getStyleValue(style, `cd_subtotal_${i + 1}`, false),
-            sortType: cdUseDefaults ? 'DIMENSION' : getStyleValue(style, `cd_sort_type_${i + 1}`, 'DIMENSION'),
-            sortMetricIndex: cdUseDefaults ? 0 : (parseInt(getStyleValue(style, `cd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
-            sortAgg: cdUseDefaults ? 'SUM' : getStyleValue(style, `cd_sort_agg_${i + 1}`, 'SUM'),
-            sortDir: cdUseDefaults ? 'ASC' : getStyleValue(style, `cd_sort_dir_${i + 1}`, 'ASC'),
+            subtotal: getStyleValue(style, `cd_subtotal_${i + 1}`, false),
+            sortType: getStyleValue(style, `cd_sort_type_${i + 1}`, 'DIMENSION'),
+            sortMetricIndex: (parseInt(getStyleValue(style, `cd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
+            sortAgg: getStyleValue(style, `cd_sort_agg_${i + 1}`, 'SUM'),
+            sortDir: getStyleValue(style, `cd_sort_dir_${i + 1}`, 'ASC'),
         });
     }
     const tree = buildDataTree(config, tables.DEFAULT);

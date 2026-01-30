@@ -1,7 +1,8 @@
 TODO list:
 
 METRIC_COLUMN:
-* Sorting
+* Sorting is wonky, it should use the grand totals to sort on. It looks like it's currently sorting on the first coldim's metrics
+* Subtotal rows + Grand Total Row creates empty boxes at the bottom right corner (this is working for grand totals)
 
 METRIC_ROW:
 * Metric Order is reversed
