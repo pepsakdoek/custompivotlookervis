@@ -39,16 +39,18 @@ function renderHeader(table, tree, config) {
             }
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
                 th.className = 'row-dim-label';
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
             if (colHeaderRowCount > 1) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1;
+                topLeft.classList.add('TLC');
                 headerRows[0].appendChild(topLeft);
             }
 
@@ -60,6 +62,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child) * metricMultiplier;
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         headerRows[level].appendChild(th);
                         if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
@@ -69,6 +72,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = `Subtotal ${path[path.length - 1]}`;
                         th.colSpan = metrics.length;
+                        th.classList.add('CSH', `CSH${node.level + 1}`);
                         const rowSpan = colDims.length - level;
                         if (rowSpan > 1) {
                             th.rowSpan = rowSpan;
@@ -83,23 +87,26 @@ function renderHeader(table, tree, config) {
                     grandTotalTh.textContent = 'Grand Total';
                     grandTotalTh.colSpan = metrics.length;
                     grandTotalTh.rowSpan = colDims.length;
+                    grandTotalTh.classList.add('RGH');
                     headerRows[0].appendChild(grandTotalTh);
                 }
             }
 
             const colDefs = hasColDims ? (tree.colDefs || []) : [[]];
             colDefs.forEach(() => {
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     lastHeaderRow.appendChild(th);
                 });
             });
 
             if (config.showRowGrandTotal) {
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     if (!hasColDims) {
                         th.textContent = 'Grand Total ' + m.name;
                     }
@@ -121,13 +128,15 @@ function renderHeader(table, tree, config) {
             const lastHeaderRow = headerRows[headerRows.length-1];
 
             // Add row dimension headers and the "Measure" header to the last header row.
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
             const measureTh = document.createElement('th');
             measureTh.textContent = 'Measure';
+            measureTh.classList.add('MRH');
             lastHeaderRow.appendChild(measureTh);
 
             if (hasColDims) {
@@ -136,6 +145,7 @@ function renderHeader(table, tree, config) {
                     const topLeft = document.createElement('th');
                     topLeft.colSpan = rowDims.length + 1; // Span over row dims and Measure.
                     topLeft.rowSpan = totalHeaderRows - 1;
+                    topLeft.classList.add('TLC');
                      headerRows[0].appendChild(topLeft);
                 }
 
@@ -148,6 +158,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child);
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         // If a branch of the tree is shorter, the last node needs to span downwards.
                         if (Object.keys(child.children).length === 0 && (level < totalHeaderRows - 1)) {
                             th.rowSpan = totalHeaderRows - level;
@@ -162,6 +173,7 @@ function renderHeader(table, tree, config) {
                 // Add a "Value" header if there are no column dimensions.
                 const valueTh = document.createElement('th');
                 valueTh.textContent = 'Value';
+                valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
             }
             break;
@@ -181,12 +193,14 @@ function renderHeader(table, tree, config) {
             // Add "Measure" header first
             const measureTh = document.createElement('th');
             measureTh.textContent = 'Measure';
+            measureTh.classList.add('MRH');
             lastHeaderRow.appendChild(measureTh);
 
             // Add row dimension headers
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
 
@@ -196,6 +210,7 @@ function renderHeader(table, tree, config) {
                     const topLeft = document.createElement('th');
                     topLeft.colSpan = rowDims.length + 1; // Span over row dims and Measure.
                     topLeft.rowSpan = totalHeaderRows - 1;
+                    topLeft.classList.add('TLC');
                      headerRows[0].appendChild(topLeft);
                 }
 
@@ -208,6 +223,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child);
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         // If a branch of the tree is shorter, the last node needs to span downwards.
                         if (Object.keys(child.children).length === 0 && (level < totalHeaderRows - 1)) {
                             th.rowSpan = totalHeaderRows - level;
@@ -222,6 +238,7 @@ function renderHeader(table, tree, config) {
                 // Add a "Value" header if there are no column dimensions.
                 const valueTh = document.createElement('th');
                 valueTh.textContent = 'Value';
+                valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
             }
             break;
@@ -240,14 +257,16 @@ function renderHeader(table, tree, config) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1; // Span all rows except the last one.
+                topLeft.classList.add('TLC');
                 headerRows[0].appendChild(topLeft);
             }
             
             // Add row dimension headers to the last header row.
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
                 th.className = 'row-dim-label';
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
 
@@ -256,10 +275,15 @@ function renderHeader(table, tree, config) {
                 // level 0: metrics, level 1+: colDims
                 let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                 
-                sortedChildren.forEach(child => {
+                sortedChildren.forEach((child, i) => {
                     const th = document.createElement('th');
                     th.textContent = child.value;
                     th.colSpan = getLeafCount(child);
+                    if (level === 0) {
+                        th.classList.add('MH', `MH${i + 1}`);
+                    } else {
+                        th.classList.add('CDH', `CDH${level}`);
+                    }
 
                     headerRows[level].appendChild(th);
 
@@ -277,14 +301,16 @@ function renderHeader(table, tree, config) {
                 build(tree.colRoot, 0);
             } else if (metrics.length > 0) {
                 // No colDims, just metrics
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     lastHeaderRow.appendChild(th);
                 });
             } else { // No metrics, no coldims, just have rowdims. Add a value column
                 const th = document.createElement('th');
                 th.textContent = "Value";
+                th.classList.add('VH');
                 lastHeaderRow.appendChild(th);
             }
             break;

@@ -10,9 +10,20 @@ function renderBodyMetricRow(tbody, tree, config) {
             if (isLeaf) {
                 // In METRIC_ROW, the leaf represents a single metric's value for a given dimension combination.
                 const tr = tbody.insertRow();
+                tr.classList.add('DR');
                 
                 // 1. Fill Dimension and Measure Name values from the path
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    // The last item in the path is the measure name
+                    if (i === newPath.length - 1) {
+                        const mIdx = config.metrics.findIndex(m => m.name === val);
+                        cell.classList.add('MNC', `MNC${mIdx + 1}`);
+                    } else {
+                        cell.classList.add('RDC', `RDC${i + 1}`);
+                    }
+                });
 
                 // 2. Pad empty cells if the path is shorter than the full row dimension depth + measure column.
                 const expectedDimCols = (config.rowDims.length || 0) + 1;
@@ -41,15 +52,19 @@ function renderBodyMetricRow(tbody, tree, config) {
                 if (settings && settings.subtotal) {
                     config.metrics.forEach((metric, mIdx) => {
                         const tr = tbody.insertRow();
-                        tr.className = 'subtotal-row';
+                        tr.classList.add('RSR');
                         tr.style.fontWeight = 'bold';
 
                         for (let i = 0; i < childNode.level; i++) tr.insertCell().textContent = '';
-                        tr.insertCell().textContent = 'Subtotal ' + childNode.value;
-                        
+                        const labelCell = tr.insertCell();
+                        labelCell.textContent = 'Subtotal ' + childNode.value;
+                        labelCell.classList.add('RSL');
+
                         const remainingDims = config.rowDims.length - (childNode.level + 1);
                         for (let i = 0; i < remainingDims; i++) tr.insertCell();
-                        tr.insertCell().textContent = metric.name;
+                        const measureCell = tr.insertCell();
+                        measureCell.textContent = metric.name;
+                        measureCell.classList.add('MNC', `MNC${mIdx + 1}`);
 
                         (tree.colDefs || []).forEach(colDef => {
                             const nodeStats = getAggregatedNodeMetrics(childNode, colDef.key, config);
@@ -57,6 +72,7 @@ function renderBodyMetricRow(tbody, tree, config) {
                             const val = getAggregatedValue(nodeStats ? nodeStats[mIdx] : null, aggType);
                             const cell = tr.insertCell();
                             cell.textContent = formatMetricValue(val, config.metricFormats[mIdx]);
+                            cell.classList.add('RSV', `RSV${mIdx + 1}`);
                         });
                     });
                 }

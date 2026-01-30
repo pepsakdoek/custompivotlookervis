@@ -346,6 +346,7 @@ function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) 
     const val = getAggregatedValue(metricStats, 'SUM'); // Assuming getAggregatedValue is available
     const formatType = config.metricFormats[metricIndex] || 'DEFAULT'; // Assuming metricFormats is in config
     cell.textContent = formatMetricValue(val, formatType); // Assuming formatMetricValue is available
+    cell.classList.add('MC', `MC${metricIndex + 1}`);
 }
 
 function getCustomAggregatedValue(aggString, metricStats, config) {

@@ -37,14 +37,17 @@ function drawViz(data) {
     container.style.fontFamily = data.theme.themeFontFamily;
     container.style.fontSize = data.theme.themeFontSize;
     document.body.appendChild(container);
-    if (!data.tables || !data.tables.DEFAULT || data.tables.DEFAULT.length === 0) {
-        console.warn('No data found in data.tables.DEFAULT');
-        container.textContent = 'No data to display.';
-        return;
-    }
-    debugLog('Data tables.DEFAULT:', data.tables.DEFAULT);
+
     debugLog('Fields:', data.fields);
     const {style,fields,tables,theme} = data;
+
+    const advcss = getStyleValue(style, 'advcss', '');
+    if (advcss) {
+        const styleEl = document.createElement('style');
+        styleEl.textContent = advcss;
+        document.head.appendChild(styleEl);
+    }
+
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
         rowDims: fields.dimensions || [],

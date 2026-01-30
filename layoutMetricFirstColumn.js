@@ -12,7 +12,12 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
             // Only render a data row if this is a leaf node
             if (isLeaf) {
                 const tr = tbody.insertRow();
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                tr.classList.add('DR');
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    cell.classList.add('RDC', `RDC${i + 1}`);
+                });
                 const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
                 
@@ -20,14 +25,16 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 config.metrics.forEach((metric, metricIndex) => {
                     (tree.colDefs || []).slice().reverse().forEach(colDef => {
                         const metricValues = childNode.metrics[colDef.key];
+                        const cell = tr.insertCell();
+                        cell.classList.add('MC', `MC${metricIndex + 1}`);
 
                         if (!metricValues) {
-                            tr.insertCell().textContent = '-';
+                            cell.textContent = '-';
                         } else {
                             const val = getAggregatedValue(metricValues[0], 'SUM');
                             const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                             const formatted = formatMetricValue(val, formatType);
-                            tr.insertCell().textContent = formatted;
+                            cell.textContent = formatted;
                         }
                     });
                 });
@@ -43,10 +50,13 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 // Render subtotal row for this node
                 const subtotalRow = tbody.insertRow();
                 subtotalRow.style.fontWeight = 'bold';
+                subtotalRow.classList.add('RSR');
                 // Add dimension labels up to this level, then "Subtotal"
                 for (let i = 0; i < dimensionLevel + 1; i++) {
                     if (i === dimensionLevel) {
-                        subtotalRow.insertCell().textContent = `Subtotal ${childNode.value}`;
+                        const cell = subtotalRow.insertCell();
+                        cell.textContent = `Subtotal ${childNode.value}`;
+                        cell.classList.add('RSL');
                     } else {
                         subtotalRow.insertCell().textContent = '';
                     }
@@ -77,8 +87,11 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                         
                         collectLeafMetrics(childNode);
                         
+                        const cell = subtotalRow.insertCell();
+                        cell.classList.add('RSV', `RSV${metricIndex + 1}`);
+
                         if (!aggregatedMetrics) {
-                            subtotalRow.insertCell().textContent = '-';
+                            cell.textContent = '-';
                         } else {
                             const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
                             let val = 0;
@@ -89,7 +102,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                                 const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                                 val = formatMetricValue(val, formatType);
                             }
-                            subtotalRow.insertCell().textContent = val;
+                            cell.textContent = val;
                         }
                     });
                 });

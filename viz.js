@@ -372,6 +372,7 @@ function renderMetricCell(tr, metricStats, metricIndex, config, cellToPopulate) 
     const val = getAggregatedValue(metricStats, 'SUM'); // Assuming getAggregatedValue is available
     const formatType = config.metricFormats[metricIndex] || 'DEFAULT'; // Assuming metricFormats is in config
     cell.textContent = formatMetricValue(val, formatType); // Assuming formatMetricValue is available
+    cell.classList.add('MC', `MC${metricIndex + 1}`);
 }
 
 function getCustomAggregatedValue(aggString, metricStats, config) {
@@ -622,26 +623,25 @@ function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metr
 }
 function renderBodyMetricColumn(tbody, tree, config) {
 
-    // let rowSubtotalMetrics = {};
-    // let rowGrandTotalMetrics = {};
-    // config.metrics.forEach((m, i) => {
-    //     rowGrandTotalMetrics[m.name] = 0;
-    // });
-
-
     function renderTotalsRow(node, isGrandTotal) {
         // This is the Subtotal ROW for the COLUMNS
         const tr = tbody.insertRow();
         tr.style.fontWeight = 'bold';
 
         if (isGrandTotal) {
-            tr.insertCell().textContent = 'Grand Total';
+            tr.classList.add('CGR');
+            const labelCell = tr.insertCell()
+            labelCell.textContent = 'Grand Total';
+            labelCell.classList.add('CGL');
             for (let i = 1; i < config.rowDims.length; i++) {
                 tr.insertCell();
             }
         } else {
+            tr.classList.add('RSR');
             for (let i = 0; i < node.level; i++) tr.insertCell();
-            tr.insertCell().textContent = 'Subtotal ' + node.value;
+            const labelCell = tr.insertCell()
+            labelCell.textContent = 'Subtotal ' + node.value;
+            labelCell.classList.add('RSL');
             for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
         }
 
@@ -651,6 +651,11 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';
                 const aggTypeUpper = aggString.toUpperCase().trim();
                 const cell = tr.insertCell();
+                if (!isGrandTotal) {
+                    cell.classList.add('RSV', `RSV${i + 1}`);
+                } else {
+                    cell.classList.add('CGV', `CGV${i + 1}`);
+                }
 
                 let val;
                 if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
@@ -692,8 +697,13 @@ function renderBodyMetricColumn(tbody, tree, config) {
 
             if (isLeaf) {
                 const tr = tbody.insertRow();
+                tr.classList.add('DR');
 
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    cell.classList.add('RDC', `RDC${i + 1}`);
+                });
                 const rowDimCount = config.rowDims?.length || 0;
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
 
@@ -743,6 +753,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                         const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
                         cell.style.fontWeight = 'bold';
+                        cell.classList.add('RGV', `RGV${i + 1}`);
 
                         let val;
                         if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
@@ -785,9 +796,20 @@ function renderBodyMetricRow(tbody, tree, config) {
             if (isLeaf) {
                 // In METRIC_ROW, the leaf represents a single metric's value for a given dimension combination.
                 const tr = tbody.insertRow();
+                tr.classList.add('DR');
                 
                 // 1. Fill Dimension and Measure Name values from the path
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    // The last item in the path is the measure name
+                    if (i === newPath.length - 1) {
+                        const mIdx = config.metrics.findIndex(m => m.name === val);
+                        cell.classList.add('MNC', `MNC${mIdx + 1}`);
+                    } else {
+                        cell.classList.add('RDC', `RDC${i + 1}`);
+                    }
+                });
 
                 // 2. Pad empty cells if the path is shorter than the full row dimension depth + measure column.
                 const expectedDimCols = (config.rowDims.length || 0) + 1;
@@ -816,15 +838,19 @@ function renderBodyMetricRow(tbody, tree, config) {
                 if (settings && settings.subtotal) {
                     config.metrics.forEach((metric, mIdx) => {
                         const tr = tbody.insertRow();
-                        tr.className = 'subtotal-row';
+                        tr.classList.add('RSR');
                         tr.style.fontWeight = 'bold';
 
                         for (let i = 0; i < childNode.level; i++) tr.insertCell().textContent = '';
-                        tr.insertCell().textContent = 'Subtotal ' + childNode.value;
-                        
+                        const labelCell = tr.insertCell();
+                        labelCell.textContent = 'Subtotal ' + childNode.value;
+                        labelCell.classList.add('RSL');
+
                         const remainingDims = config.rowDims.length - (childNode.level + 1);
                         for (let i = 0; i < remainingDims; i++) tr.insertCell();
-                        tr.insertCell().textContent = metric.name;
+                        const measureCell = tr.insertCell();
+                        measureCell.textContent = metric.name;
+                        measureCell.classList.add('MNC', `MNC${mIdx + 1}`);
 
                         (tree.colDefs || []).forEach(colDef => {
                             const nodeStats = getAggregatedNodeMetrics(childNode, colDef.key, config);
@@ -832,6 +858,7 @@ function renderBodyMetricRow(tbody, tree, config) {
                             const val = getAggregatedValue(nodeStats ? nodeStats[mIdx] : null, aggType);
                             const cell = tr.insertCell();
                             cell.textContent = formatMetricValue(val, config.metricFormats[mIdx]);
+                            cell.classList.add('RSV', `RSV${mIdx + 1}`);
                         });
                     });
                 }
@@ -854,7 +881,12 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
             // Only render a data row if this is a leaf node
             if (isLeaf) {
                 const tr = tbody.insertRow();
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                tr.classList.add('DR');
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    cell.classList.add('RDC', `RDC${i + 1}`);
+                });
                 const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
                 
@@ -862,14 +894,16 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 config.metrics.forEach((metric, metricIndex) => {
                     (tree.colDefs || []).slice().reverse().forEach(colDef => {
                         const metricValues = childNode.metrics[colDef.key];
+                        const cell = tr.insertCell();
+                        cell.classList.add('MC', `MC${metricIndex + 1}`);
 
                         if (!metricValues) {
-                            tr.insertCell().textContent = '-';
+                            cell.textContent = '-';
                         } else {
                             const val = getAggregatedValue(metricValues[0], 'SUM');
                             const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                             const formatted = formatMetricValue(val, formatType);
-                            tr.insertCell().textContent = formatted;
+                            cell.textContent = formatted;
                         }
                     });
                 });
@@ -885,10 +919,13 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 // Render subtotal row for this node
                 const subtotalRow = tbody.insertRow();
                 subtotalRow.style.fontWeight = 'bold';
+                subtotalRow.classList.add('RSR');
                 // Add dimension labels up to this level, then "Subtotal"
                 for (let i = 0; i < dimensionLevel + 1; i++) {
                     if (i === dimensionLevel) {
-                        subtotalRow.insertCell().textContent = `Subtotal ${childNode.value}`;
+                        const cell = subtotalRow.insertCell();
+                        cell.textContent = `Subtotal ${childNode.value}`;
+                        cell.classList.add('RSL');
                     } else {
                         subtotalRow.insertCell().textContent = '';
                     }
@@ -919,8 +956,11 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                         
                         collectLeafMetrics(childNode);
                         
+                        const cell = subtotalRow.insertCell();
+                        cell.classList.add('RSV', `RSV${metricIndex + 1}`);
+
                         if (!aggregatedMetrics) {
-                            subtotalRow.insertCell().textContent = '-';
+                            cell.textContent = '-';
                         } else {
                             const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
                             let val = 0;
@@ -931,7 +971,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                                 const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                                 val = formatMetricValue(val, formatType);
                             }
-                            subtotalRow.insertCell().textContent = val;
+                            cell.textContent = val;
                         }
                     });
                 });
@@ -954,9 +994,20 @@ function renderBodyMetricFirstRow(tbody, tree, config) {
             if (isLeaf) {
                 // In METRIC_ROW, the leaf represents a single metric's value for a given dimension combination.
                 const tr = tbody.insertRow();
+                tr.classList.add('DR');
                 
                 // 1. Fill Dimension and Measure Name values from the path
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    // The first item in the path is the measure name
+                    if (i === 0) {
+                        const mIdx = config.metrics.findIndex(m => m.name === val);
+                        cell.classList.add('MNC', `MNC${mIdx + 1}`);
+                    } else {
+                        cell.classList.add('RDC', `RDC${i}`);
+                    }
+                });
 
                 // 2. Pad empty cells if the path is shorter than the full row dimension depth + measure column.
                 const expectedDimCols = (config.rowDims.length || 0) + 1;
@@ -972,7 +1023,7 @@ function renderBodyMetricFirstRow(tbody, tree, config) {
                     // The tree builder ensures that for METRIC_ROW, each leaf node path has one metric.
                     // The metric's data is thus the first (and only) element in the stats array.
                     // We need to find the original index of this metric to get its format settings.
-                    const metricName = newPath[newPath.length - 1];
+                    const metricName = newPath[0];
                     const mIdx = config.metrics.findIndex(m => m.name === metricName);
 
                     renderMetricCell(tr, stats ? stats[0] : null, mIdx, config, valueCell);
@@ -985,15 +1036,19 @@ function renderBodyMetricFirstRow(tbody, tree, config) {
                 if (settings && settings.subtotal) {
                     config.metrics.forEach((metric, mIdx) => {
                         const tr = tbody.insertRow();
-                        tr.className = 'subtotal-row';
+                        tr.classList.add('RSR');
                         tr.style.fontWeight = 'bold';
 
                         for (let i = 0; i < childNode.level; i++) tr.insertCell().textContent = '';
-                        tr.insertCell().textContent = 'Subtotal ' + childNode.value;
+                        const labelCell = tr.insertCell();
+                        labelCell.textContent = 'Subtotal ' + childNode.value;
+                        labelCell.classList.add('RSL');
                         
                         const remainingDims = config.rowDims.length - (childNode.level + 1);
                         for (let i = 0; i < remainingDims; i++) tr.insertCell();
-                        tr.insertCell().textContent = metric.name;
+                        const measureCell = tr.insertCell();
+                        measureCell.textContent = metric.name;
+                        measureCell.classList.add('MNC', `MNC${mIdx + 1}`);
 
                         (tree.colDefs || []).forEach(colDef => {
                             const nodeStats = getAggregatedNodeMetrics(childNode, colDef.key, config);
@@ -1001,6 +1056,7 @@ function renderBodyMetricFirstRow(tbody, tree, config) {
                             const val = getAggregatedValue(nodeStats ? nodeStats[mIdx] : null, aggType);
                             const cell = tr.insertCell();
                             cell.textContent = formatMetricValue(val, config.metricFormats[mIdx]);
+                            cell.classList.add('RSV', `RSV${mIdx + 1}`);
                         });
                     });
                 }
@@ -1050,16 +1106,18 @@ function renderHeader(table, tree, config) {
             }
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
                 th.className = 'row-dim-label';
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
             if (colHeaderRowCount > 1) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1;
+                topLeft.classList.add('TLC');
                 headerRows[0].appendChild(topLeft);
             }
 
@@ -1071,6 +1129,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child) * metricMultiplier;
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         headerRows[level].appendChild(th);
                         if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
@@ -1080,6 +1139,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = `Subtotal ${path[path.length - 1]}`;
                         th.colSpan = metrics.length;
+                        th.classList.add('CSH', `CSH${node.level + 1}`);
                         const rowSpan = colDims.length - level;
                         if (rowSpan > 1) {
                             th.rowSpan = rowSpan;
@@ -1094,23 +1154,26 @@ function renderHeader(table, tree, config) {
                     grandTotalTh.textContent = 'Grand Total';
                     grandTotalTh.colSpan = metrics.length;
                     grandTotalTh.rowSpan = colDims.length;
+                    grandTotalTh.classList.add('RGH');
                     headerRows[0].appendChild(grandTotalTh);
                 }
             }
 
             const colDefs = hasColDims ? (tree.colDefs || []) : [[]];
             colDefs.forEach(() => {
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     lastHeaderRow.appendChild(th);
                 });
             });
 
             if (config.showRowGrandTotal) {
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     if (!hasColDims) {
                         th.textContent = 'Grand Total ' + m.name;
                     }
@@ -1132,13 +1195,15 @@ function renderHeader(table, tree, config) {
             const lastHeaderRow = headerRows[headerRows.length-1];
 
             // Add row dimension headers and the "Measure" header to the last header row.
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
             const measureTh = document.createElement('th');
             measureTh.textContent = 'Measure';
+            measureTh.classList.add('MRH');
             lastHeaderRow.appendChild(measureTh);
 
             if (hasColDims) {
@@ -1147,6 +1212,7 @@ function renderHeader(table, tree, config) {
                     const topLeft = document.createElement('th');
                     topLeft.colSpan = rowDims.length + 1; // Span over row dims and Measure.
                     topLeft.rowSpan = totalHeaderRows - 1;
+                    topLeft.classList.add('TLC');
                      headerRows[0].appendChild(topLeft);
                 }
 
@@ -1159,6 +1225,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child);
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         // If a branch of the tree is shorter, the last node needs to span downwards.
                         if (Object.keys(child.children).length === 0 && (level < totalHeaderRows - 1)) {
                             th.rowSpan = totalHeaderRows - level;
@@ -1173,6 +1240,7 @@ function renderHeader(table, tree, config) {
                 // Add a "Value" header if there are no column dimensions.
                 const valueTh = document.createElement('th');
                 valueTh.textContent = 'Value';
+                valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
             }
             break;
@@ -1192,12 +1260,14 @@ function renderHeader(table, tree, config) {
             // Add "Measure" header first
             const measureTh = document.createElement('th');
             measureTh.textContent = 'Measure';
+            measureTh.classList.add('MRH');
             lastHeaderRow.appendChild(measureTh);
 
             // Add row dimension headers
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
 
@@ -1207,6 +1277,7 @@ function renderHeader(table, tree, config) {
                     const topLeft = document.createElement('th');
                     topLeft.colSpan = rowDims.length + 1; // Span over row dims and Measure.
                     topLeft.rowSpan = totalHeaderRows - 1;
+                    topLeft.classList.add('TLC');
                      headerRows[0].appendChild(topLeft);
                 }
 
@@ -1219,6 +1290,7 @@ function renderHeader(table, tree, config) {
                         const th = document.createElement('th');
                         th.textContent = child.value;
                         th.colSpan = getLeafCount(child);
+                        th.classList.add('CDH', `CDH${level + 1}`);
                         // If a branch of the tree is shorter, the last node needs to span downwards.
                         if (Object.keys(child.children).length === 0 && (level < totalHeaderRows - 1)) {
                             th.rowSpan = totalHeaderRows - level;
@@ -1233,6 +1305,7 @@ function renderHeader(table, tree, config) {
                 // Add a "Value" header if there are no column dimensions.
                 const valueTh = document.createElement('th');
                 valueTh.textContent = 'Value';
+                valueTh.classList.add('VH');
                 lastHeaderRow.appendChild(valueTh);
             }
             break;
@@ -1251,14 +1324,16 @@ function renderHeader(table, tree, config) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1; // Span all rows except the last one.
+                topLeft.classList.add('TLC');
                 headerRows[0].appendChild(topLeft);
             }
             
             // Add row dimension headers to the last header row.
-            rowDims.forEach(d => {
+            rowDims.forEach((d, i) => {
                 const th = document.createElement('th');
                 th.textContent = d.name;
                 th.className = 'row-dim-label';
+                th.classList.add('RDH', `RDH${i + 1}`);
                 lastHeaderRow.appendChild(th);
             });
 
@@ -1267,10 +1342,15 @@ function renderHeader(table, tree, config) {
                 // level 0: metrics, level 1+: colDims
                 let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                 
-                sortedChildren.forEach(child => {
+                sortedChildren.forEach((child, i) => {
                     const th = document.createElement('th');
                     th.textContent = child.value;
                     th.colSpan = getLeafCount(child);
+                    if (level === 0) {
+                        th.classList.add('MH', `MH${i + 1}`);
+                    } else {
+                        th.classList.add('CDH', `CDH${level}`);
+                    }
 
                     headerRows[level].appendChild(th);
 
@@ -1288,14 +1368,16 @@ function renderHeader(table, tree, config) {
                 build(tree.colRoot, 0);
             } else if (metrics.length > 0) {
                 // No colDims, just metrics
-                metrics.forEach(m => {
+                metrics.forEach((m, i) => {
                     const th = document.createElement('th');
                     th.textContent = m.name;
+                    th.classList.add('MH', `MH${i + 1}`);
                     lastHeaderRow.appendChild(th);
                 });
             } else { // No metrics, no coldims, just have rowdims. Add a value column
                 const th = document.createElement('th');
                 th.textContent = "Value";
+                th.classList.add('VH');
                 lastHeaderRow.appendChild(th);
             }
             break;
@@ -1337,11 +1419,21 @@ const devMode = true;
 function drawViz(data) {
 
     debugLog('drawViz called with data:', data);
+    const {style,fields,tables,theme} = data;
+    
     document.body.innerHTML = '';
     const container = document.createElement('div');
     container.style.fontFamily = data.theme.themeFontFamily;
     container.style.fontSize = data.theme.themeFontSize;
     document.body.appendChild(container);
+
+    const advcss = getStyleValue(style, 'advcss', '');
+    if (advcss) {
+        const styleEl = document.createElement('style');
+        styleEl.textContent = advcss;
+        document.head.appendChild(styleEl);
+    }
+
     if (!data.tables || !data.tables.DEFAULT || data.tables.DEFAULT.length === 0) {
         console.warn('No data found in data.tables.DEFAULT');
         container.textContent = 'No data to display.';
@@ -1349,7 +1441,7 @@ function drawViz(data) {
     }
     debugLog('Data tables.DEFAULT:', data.tables.DEFAULT);
     debugLog('Fields:', data.fields);
-    const {style,fields,tables,theme} = data;
+
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
         rowDims: fields.dimensions || [],
@@ -1379,23 +1471,19 @@ function drawViz(data) {
     }
     
     for (let i = 0; i < 5; i++) {
-        // Check if "Use Defaults" is enabled for this dimension
-        const rdUseDefaults = getStyleValue(style, `rd_use_defaults_${i + 1}`, true);
-        const cdUseDefaults = getStyleValue(style, `cd_use_defaults_${i + 1}`, true);
-        
         config.rowSettings.push({
-            subtotal: rdUseDefaults ? false : getStyleValue(style, `rd_subtotal_${i + 1}`, false),
-            sortType: rdUseDefaults ? 'DIMENSION' : getStyleValue(style, `rd_sort_type_${i + 1}`, 'DIMENSION'),
-            sortMetricIndex: rdUseDefaults ? 0 : (parseInt(getStyleValue(style, `rd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
-            sortAgg: rdUseDefaults ? 'SUM' : getStyleValue(style, `rd_sort_agg_${i + 1}`, 'SUM'),
-            sortDir: rdUseDefaults ? 'ASC' : getStyleValue(style, `rd_sort_dir_${i + 1}`, 'ASC'),
+            subtotal: getStyleValue(style, `rd_subtotal_${i + 1}`, false),
+            sortType: getStyleValue(style, `rd_sort_type_${i + 1}`, 'DIMENSION'),
+            sortMetricIndex: (parseInt(getStyleValue(style, `rd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
+            sortAgg: getStyleValue(style, `rd_sort_agg_${i + 1}`, 'SUM'),
+            sortDir: getStyleValue(style, `rd_sort_dir_${i + 1}`, 'ASC'),
         });
         config.colSettings.push({
-            subtotal: cdUseDefaults ? false : getStyleValue(style, `cd_subtotal_${i + 1}`, false),
-            sortType: cdUseDefaults ? 'DIMENSION' : getStyleValue(style, `cd_sort_type_${i + 1}`, 'DIMENSION'),
-            sortMetricIndex: cdUseDefaults ? 0 : (parseInt(getStyleValue(style, `cd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
-            sortAgg: cdUseDefaults ? 'SUM' : getStyleValue(style, `cd_sort_agg_${i + 1}`, 'SUM'),
-            sortDir: cdUseDefaults ? 'ASC' : getStyleValue(style, `cd_sort_dir_${i + 1}`, 'ASC'),
+            subtotal: getStyleValue(style, `cd_subtotal_${i + 1}`, false),
+            sortType: getStyleValue(style, `cd_sort_type_${i + 1}`, 'DIMENSION'),
+            sortMetricIndex: (parseInt(getStyleValue(style, `cd_sort_metric_index_${i + 1}`, '1'), 10) - 1),
+            sortAgg: getStyleValue(style, `cd_sort_agg_${i + 1}`, 'SUM'),
+            sortDir: getStyleValue(style, `cd_sort_dir_${i + 1}`, 'ASC'),
         });
     }
     const tree = buildDataTree(config, tables.DEFAULT);

@@ -6,13 +6,19 @@ function renderBodyMetricColumn(tbody, tree, config) {
         tr.style.fontWeight = 'bold';
 
         if (isGrandTotal) {
-            tr.insertCell().textContent = 'Grand Total';
+            tr.classList.add('CGR');
+            const labelCell = tr.insertCell()
+            labelCell.textContent = 'Grand Total';
+            labelCell.classList.add('CGL');
             for (let i = 1; i < config.rowDims.length; i++) {
                 tr.insertCell();
             }
         } else {
+            tr.classList.add('RSR');
             for (let i = 0; i < node.level; i++) tr.insertCell();
-            tr.insertCell().textContent = 'Subtotal ' + node.value;
+            const labelCell = tr.insertCell()
+            labelCell.textContent = 'Subtotal ' + node.value;
+            labelCell.classList.add('RSL');
             for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
         }
 
@@ -22,6 +28,11 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 const aggString = config.metricSubtotalAggs[i] || 'SUM';
                 const aggTypeUpper = aggString.toUpperCase().trim();
                 const cell = tr.insertCell();
+                if (!isGrandTotal) {
+                    cell.classList.add('RSV', `RSV${i + 1}`);
+                } else {
+                    cell.classList.add('CGV', `CGV${i + 1}`);
+                }
 
                 let val;
                 if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
@@ -63,8 +74,13 @@ function renderBodyMetricColumn(tbody, tree, config) {
 
             if (isLeaf) {
                 const tr = tbody.insertRow();
+                tr.classList.add('DR');
 
-                newPath.forEach(val => tr.insertCell().textContent = val);
+                newPath.forEach((val, i) => {
+                    const cell = tr.insertCell();
+                    cell.textContent = val;
+                    cell.classList.add('RDC', `RDC${i + 1}`);
+                });
                 const rowDimCount = config.rowDims?.length || 0;
                 for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
 
@@ -114,6 +130,7 @@ function renderBodyMetricColumn(tbody, tree, config) {
                         const aggTypeUpper = aggString.toUpperCase().trim();
                         const cell = tr.insertCell();
                         cell.style.fontWeight = 'bold';
+                        cell.classList.add('RGV', `RGV${i + 1}`);
 
                         let val;
                         if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
