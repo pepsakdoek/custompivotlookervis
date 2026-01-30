@@ -1,12 +1,5 @@
 function renderBodyMetricColumn(tbody, tree, config) {
 
-    // let rowSubtotalMetrics = {};
-    // let rowGrandTotalMetrics = {};
-    // config.metrics.forEach((m, i) => {
-    //     rowGrandTotalMetrics[m.name] = 0;
-    // });
-
-
     function renderTotalsRow(node, isGrandTotal) {
         // This is the Subtotal ROW for the COLUMNS
         const tr = tbody.insertRow();

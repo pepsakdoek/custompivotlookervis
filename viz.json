@@ -687,10 +687,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -763,10 +760,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -839,10 +833,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -915,10 +906,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -991,10 +979,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -1073,10 +1058,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -1149,10 +1131,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -1225,10 +1204,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -1301,10 +1277,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"
@@ -1377,10 +1350,7 @@
               "label": "Count",
               "value": "COUNT"
             },
-            {
-              "label": "Count Distinct",
-              "value": "COUNT_DISTINCT"
-            },
+
             {
               "label": "Min",
               "value": "MIN"

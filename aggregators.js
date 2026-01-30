@@ -299,6 +299,8 @@ function sortChildren(childrenArray, sortConfig) {
         return childrenArray;
     }
 
+    const isAsc = sortConfig.sortDir === 'ASC';
+
     return childrenArray.sort((a, b) => {
         let valA, valB;
         if (sortConfig.sortType === 'METRIC') {
@@ -309,10 +311,19 @@ function sortChildren(childrenArray, sortConfig) {
             valA = a.value;
             valB = b.value;
         }
-        const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
-        if (valA === undefined || valA === null) return 1 * order;
-        if (valB === undefined || valB === null) return -1 * order;
-        return valA < valB ? -1 * order : 1 * order;
+
+        // Handle nulls: always push to the end regardless of direction
+        if (valA == null) return 1; 
+        if (valB == null) return -1;
+
+        if (valA === valB) return 0;
+
+        // Standard comparison logic
+        const comparison = valA < valB ? -1 : 1;
+        const dimCorrection = sortConfig.sortType === 'DIMENSION' ? -1 : 1;
+
+        // BECAUSE I RENDER RECURSIVELY THE ORDERING IS REVERSED (DIMENSIONS ARE NOT RENDERED RECURSIVELY)
+        return isAsc ? -comparison * dimCorrection : comparison * dimCorrection;
     });
 }
 
@@ -372,6 +383,13 @@ function getCustomAggregatedValue(aggString, metricStats, config) {
 
     // Safe evaluation
     try {
+        // Security tightening: Treat the result as a math-only string
+        // This ensures that after replacement, ONLY numbers and math symbols remain.
+        // We exclude letters entirely here. 
+        if (/[a-zA-Z]/.test(expression)) {
+            console.error('Security Block: Expression contains unauthorized words/tokens:', expression);
+            return 'Error';
+        }
         // Updated regex to be more strict. Only allow numbers, operators, and parenthesis.
         if (!/^[0-9.+\-*/()\s]+$/.test(expression)) {
             // throw new Error('Invalid characters in expression');
