@@ -1,3 +1,5 @@
+// Main.js This is the entry to the community visualization
+
 function renderBody(table, tree, config) {
     const tbody = table.createTBody();
     

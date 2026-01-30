@@ -2,7 +2,6 @@ TODO list:
 
 METRIC_COLUMN:
 * Sorting is wonky, it should use the grand totals to sort on. It looks like it's currently sorting on the first coldim's metrics
-* Subtotal rows + Grand Total Row creates empty boxes at the bottom right corner (this is working for grand totals)
 
 METRIC_ROW:
 * Metric Order is reversed
@@ -25,5 +24,3 @@ METRIC_FIRST_ROW:
 * Grand Total
 * Sorting
 
-GENERAL FORMATING:
-* Maybe just add a .CSS block for formatting like customtable. Maybe add css classes for M[1-10] (metrics) and R[1-5] and C[1-5], RS[1-5] (row subtotal) and CS[1-5] (col subtotal) and RGT (row grand total) and CGT (column grand total) to give the user almost full control over the formatting. Chat with AI for which elements are needed (headers also might need formatting, as well as row 'headers' but that is just row DIMS)
