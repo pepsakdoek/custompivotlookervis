@@ -971,10 +971,10 @@ function renderBodyMetricRow(tbody, tree, config) {
     }
     recursiveRender(tree.rowRoot, []);
 
-    // // Column Grand Totals (Bottom of table)
-    // if (config.showColumnGrandTotal) {
-    //     renderSubtotalRows(tree.rowRoot, 'Grand Total', true);
-    // }
+    // Column Grand Totals (Bottom of table)
+    if (config.showColumnGrandTotal) {
+        renderSubtotalRows(tree.rowRoot, 'Grand Total', true);
+    }
 }
 
 function renderBodyMeasureFirstColumn(tbody, tree, config) {
@@ -1327,7 +1327,7 @@ function renderHeader(table, tree, config) {
                 }
 
                 // Build the column dimension header tree.
-                function build(node, level) {
+                function build(node, level, path) {
                     let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                     const targetRow = headerRows[level];
 
@@ -1341,10 +1341,24 @@ function renderHeader(table, tree, config) {
                             th.rowSpan = totalHeaderRows - level;
                         }
                         targetRow.appendChild(th);
-                        if (Object.keys(child.children).length > 0) build(child, level + 1);
+                        if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
+
+                    const subtotalConfig = config.colSettings[node.level];
+                    if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+                        const th = document.createElement('th');
+                        th.textContent = `Subtotal ${path[path.length - 1]}`;
+                        th.colSpan = 1;
+                        th.classList.add('CSH', `CSH${node.level + 1}`);
+                        
+                        const rowSpan = totalHeaderRows - level;
+                        if (rowSpan > 1) {
+                            th.rowSpan = rowSpan;
+                        }
+                        targetRow.appendChild(th);
+                    }
                 }
-                build(tree.colRoot, 0);
+                build(tree.colRoot, 0, []);
 
             } else { // No colDims
                 // Add a "Value" header if there are no column dimensions.
@@ -1400,7 +1414,7 @@ function renderHeader(table, tree, config) {
                 }
 
                 // Build the column dimension header tree.
-                function build(node, level) {
+                function build(node, level, path) {
                     let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                     const targetRow = headerRows[level];
 
@@ -1414,10 +1428,24 @@ function renderHeader(table, tree, config) {
                             th.rowSpan = totalHeaderRows - level;
                         }
                         targetRow.appendChild(th);
-                        if (Object.keys(child.children).length > 0) build(child, level + 1);
+                        if (Object.keys(child.children).length > 0) build(child, level + 1, [...path, child.value]);
                     });
+
+                    const subtotalConfig = config.colSettings[node.level];
+                    if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+                        const th = document.createElement('th');
+                        th.textContent = `Subtotal ${path[path.length - 1]}`;
+                        th.colSpan = 1;
+                        th.classList.add('CSH', `CSH${node.level + 1}`);
+                        
+                        const rowSpan = totalHeaderRows - level;
+                        if (rowSpan > 1) {
+                            th.rowSpan = rowSpan;
+                        }
+                        targetRow.appendChild(th);
+                    }
                 }
-                build(tree.colRoot, 0);
+                build(tree.colRoot, 0, []);
 
             } else { // No colDims
                 // Add a "Value" header if there are no column dimensions.
