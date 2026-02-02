@@ -1600,11 +1600,13 @@ function drawViz(data) {
     const {style,fields,tables,theme} = data;
 
     const advcss = getStyleValue(style, 'advcss', '');
-    if (advcss) {
-        const styleEl = document.createElement('style');
-        styleEl.textContent = advcss;
+    let styleEl = document.getElementById('adv-css');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'adv-css';
         document.head.appendChild(styleEl);
     }
+    styleEl.textContent = advcss;
 
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
