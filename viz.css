@@ -26,6 +26,11 @@ td {
   color: #666;
 }
 
+/* TOP LEFT CLASS should be above everytthing */
+TLC {
+  z-index: 1000;
+}
+
 /* 
   Configuration structure:
   1. Pivot Controls - Measure display options

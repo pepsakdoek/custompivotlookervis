@@ -315,7 +315,7 @@ function renderHeader(table, tree, config) {
             });
 
             // Recursive function to build the column headers.
-            function build(node, level) {
+            function build(node, level, path) {
                 // level 0: metrics, level 1+: colDims
                 let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
                 
@@ -332,17 +332,30 @@ function renderHeader(table, tree, config) {
                     headerRows[level].appendChild(th);
 
                     if (Object.keys(child.children).length > 0) {
-                        build(child, level + 1);
+                        build(child, level + 1, [...path, child.value]);
                     } else if (hasColDims && level < colDims.length) {
                         // This is a leaf in a column-dimension branch that is not at the lowest level.
                         // It needs to span the remaining rows.
                         th.rowSpan = colDims.length - level + 1;
                     }
                 });
+                
+                const subtotalConfig = config.colSettings[node.level];
+                if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+                    const th = document.createElement('th');
+                    th.textContent = `Subtotal ${path[path.length - 1]}`;
+                    th.colSpan = 1; 
+                    th.classList.add('CSH', `CSH${node.level + 1}`);
+                    const rowSpan = colHeaderRowCount - level;
+                    if (rowSpan > 1) {
+                        th.rowSpan = rowSpan;
+                    }
+                    headerRows[level].appendChild(th);
+                }
             }
 
             if (Object.keys(tree.colRoot.children).length > 0) {
-                build(tree.colRoot, 0);
+                build(tree.colRoot, 0, []);
             } else if (metrics.length > 0) {
                 // No colDims, just metrics
                 metrics.forEach((m, i) => {

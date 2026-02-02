@@ -5,8 +5,6 @@ METRIC_COLUMN:
 
 METRIC_ROW:
 * Requires more in depth testing
-* Bugs on column subtotals 
- * header name for subtotal columns are not implemented
 * Sorting
 
 METRIC_FIRST_COLUMN:

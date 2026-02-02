@@ -8,7 +8,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
-            
+
             // Only render a data row if this is a leaf node
             if (isLeaf) {
                 const tr = tbody.insertRow();
@@ -18,40 +18,47 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                     cell.textContent = val;
                     cell.classList.add('RDC', `RDC${i + 1}`);
                 });
-                const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
-                for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
-                
-                // Render metric values for this row
-                config.metrics.forEach((metric, metricIndex) => {
-                    (tree.colDefs || []).slice().reverse().forEach(colDef => {
-                        const metricValues = childNode.metrics[colDef.key];
-                        const cell = tr.insertCell();
-                        cell.classList.add('MC', `MC${metricIndex + 1}`);
 
-                        if (!metricValues) {
-                            cell.textContent = '-';
-                        } else {
-                            const val = getAggregatedValue(metricValues[0], 'SUM');
-                            const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                            const formatted = formatMetricValue(val, formatType);
-                            cell.textContent = formatted;
-                        }
-                    });
+                // Render metric values for this row
+                (tree.colDefs || []).forEach(colDef => {
+                    const metricValues = childNode.metrics[colDef.key];
+                    const cell = tr.insertCell();
+                
+                    const keyParts = colDef.key.split('||');
+                    const metricName = keyParts[0];
+                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+                
+                    if (metricIndex === -1) {
+                        cell.textContent = '?';
+                        return;
+                    }
+                
+                    cell.classList.add('MC', `MC${metricIndex + 1}`);
+                
+                    if (!metricValues || !metricValues[0]) {
+                        cell.textContent = '-';
+                    } else {
+                        // In METRIC_FIRST_COLUMN, the aggregation happens in the tree builder.
+                        // We assume 'SUM' here to extract the value, consistent with other layouts.
+                        const val = getAggregatedValue(metricValues[0], 'SUM');
+                        const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                        const formatted = formatMetricValue(val, formatType);
+                        cell.textContent = formatted;
+                    }
                 });
             } else {
                 // Not a leaf: recurse into children first
                 recursiveRender(childNode, newPath);
             }
-            
-            // Render row subtotal - only if config explicitly requests it and this node has children
+
+            // Render row subtotal
             const dimensionLevel = childNode.level;
             const subtotalConfig = config.rowSettings[dimensionLevel];
             if (subtotalConfig && subtotalConfig.subtotal === true && Object.keys(childNode.children).length > 0) {
-                // Render subtotal row for this node
                 const subtotalRow = tbody.insertRow();
                 subtotalRow.style.fontWeight = 'bold';
                 subtotalRow.classList.add('RSR');
-                // Add dimension labels up to this level, then "Subtotal"
+                
                 for (let i = 0; i < dimensionLevel + 1; i++) {
                     if (i === dimensionLevel) {
                         const cell = subtotalRow.insertCell();
@@ -61,50 +68,41 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                         subtotalRow.insertCell().textContent = '';
                     }
                 }
-                // Add empty cells for extra dimensions
                 const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
                 for (let i = dimensionLevel + 1; i < rowDimCount; i++) subtotalRow.insertCell();
-                
-                // Render metric values for this subtotal - aggregate from all leaf descendants
-                config.metrics.forEach((metric, metricIndex) => {
-                    (tree.colDefs || []).forEach(colDef => {
-                        // Aggregate all leaf descendants' metrics for this column
-                        let aggregatedMetrics = null;
-                        
-                        function collectLeafMetrics(leafNode) {
-                            if (Object.keys(leafNode.children).length === 0) {
-                                // This is a leaf
-                                if (leafNode.metrics && leafNode.metrics[colDef.key]) {
-                                    aggregatedMetrics = aggregateMetrics(aggregatedMetrics, 
-                                        leafNode.metrics[colDef.key].map(m => m.sum), 
-                                        [{sum: 0, count: 0}]);
-                                }
-                            } else {
-                                // Recurse to leaves
-                                Object.values(leafNode.children).forEach(child => collectLeafMetrics(child));
-                            }
-                        }
-                        
-                        collectLeafMetrics(childNode);
-                        
-                        const cell = subtotalRow.insertCell();
-                        cell.classList.add('RSV', `RSV${metricIndex + 1}`);
 
-                        if (!aggregatedMetrics) {
-                            cell.textContent = '-';
+                // Render metric values for this subtotal
+                (tree.colDefs || []).forEach(colDef => {
+                    const aggregatedMetricsArray = getAggregatedNodeMetrics(childNode, colDef.key, config, colDef.isSubtotal);
+                    const cell = subtotalRow.insertCell();
+
+                    const keyParts = colDef.key.split('||');
+                    const metricName = keyParts[0];
+                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+                    if (metricIndex === -1) {
+                        cell.textContent = '?';
+                        return;
+                    }
+
+                    cell.classList.add('RSV', `RSV${metricIndex + 1}`);
+
+                    const aggregatedMetrics = aggregatedMetricsArray ? aggregatedMetricsArray[metricIndex] : null;
+
+                    if (!aggregatedMetrics) {
+                        cell.textContent = '-';
+                    } else {
+                        const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
+                        let val;
+                        if (metricAgg === 'NONE') {
+                            val = '-';
                         } else {
-                            const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
-                            let val = 0;
-                            if (metricAgg === 'NONE') {
-                                val = '-';
-                            } else {
-                                val = getAggregatedValue(aggregatedMetrics[0], metricAgg);
-                                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                                val = formatMetricValue(val, formatType);
-                            }
-                            cell.textContent = val;
+                            val = getAggregatedValue(aggregatedMetrics, metricAgg);
+                            const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                            val = formatMetricValue(val, formatType);
                         }
-                    });
+                        cell.textContent = val;
+                    }
                 });
             }
         });
