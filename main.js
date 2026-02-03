@@ -31,8 +31,8 @@ function debugLog(...args) {
 }
 const devMode = true;
 
-
 function drawViz(data) {
+
     const container = document.getElementById('viz-container');
     container.innerHTML = ''; // Clear only the container in case of re-render
     container.style.fontFamily = data.theme.themeFontFamily;

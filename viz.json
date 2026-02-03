@@ -73,19 +73,19 @@
           "defaultValue": "METRIC_COLUMN",
           "options": [
             {
-              "label": "Standard (neighboring columns)",
+              "label": "Standard (Metrics as Columns)",
               "value": "METRIC_COLUMN"
             },
             {
-              "label": "Measures as Rows",
+              "label": "Metrucs as Rows",
               "value": "METRIC_ROW"
             },
             {
-              "label": "Measures First in Columns",
+              "label": "Metrics placed 1st as Columns",
               "value": "METRIC_FIRST_COLUMN"
             },
             {
-              "label": "Measures First in Rows",
+              "label": "Metrics placed 1st as Rows",
               "value": "METRIC_FIRST_ROW"
             }
           ]
