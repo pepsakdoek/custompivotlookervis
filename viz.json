@@ -92,7 +92,13 @@
         },
         {
           "id": "advcss",
-          "label": "Add CSS Rules",
+          "label": "Add custom CSS Rules",
+          "type": "TEXTAREA",
+          "defaultValue": ""
+        },
+        {
+          "id": "conditionalFormatting",
+          "label": "Add Conditional Formatting Rules",
           "type": "TEXTAREA",
           "defaultValue": ""
         }

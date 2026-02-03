@@ -54,7 +54,12 @@ function drawViz(data) {
         styleEl.id = 'adv-css';
         document.head.appendChild(styleEl);
     }
+<<<<<<< HEAD
     styleEl.textContent = advcss;
+=======
+    // Currently not used, but TODO: implement conditional formatting
+    const conditionalFormatting = getStyleValue(style, 'conditionalFormatting', '');
+>>>>>>> 36a4d46 (add placeholders for conditional formatting)
 
     const config = {
         measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
