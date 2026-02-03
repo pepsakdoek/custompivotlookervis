@@ -14,11 +14,8 @@ METRIC_FIRST_COLUMN:
 * Sorting
 
 METRIC_FIRST_ROW:
-<<<<<<< HEAD
 * Row Subtotals
-=======
 * Row Subtotals not working correctly (maybe check excel how they subtotal), also they seem to aggregate all SUM (ie not respect metric settings)
->>>>>>> 36a4d46 (add placeholders for conditional formatting)
 * Column Subtotals
 * Grand Total
 * Sorting
