@@ -23,3 +23,4 @@ METRIC_FIRST_ROW:
 GENERAL
 * Conditional formatting, will probably use the M1-10 and R1-5 and C1-5 'thinking'
 * See if we can save a 'cached' version of the data to show the 'last' version, which will hopefully improve loading speed and render on pdfs?
+ * Just make loading faster. Customtable loads quite a lot faster, even though it's 5x the size of this viz.
