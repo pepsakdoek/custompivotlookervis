@@ -39,13 +39,15 @@ function renderHeader(table, tree, config) {
             }
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
-            rowDims.forEach((d, i) => {
-                const th = document.createElement('th');
-                th.textContent = d.name;
-                th.className = 'row-dim-label';
-                th.classList.add('RDH', `RDH${i + 1}`);
-                lastHeaderRow.appendChild(th);
-            });
+            if (rowDims.length > 0) {
+                rowDims.forEach((d, i) => {
+                    const th = document.createElement('th');
+                    th.textContent = d.name;
+                    th.className = 'row-dim-label';
+                    th.classList.add('RDH', `RDH${i + 1}`);
+                    lastHeaderRow.appendChild(th);
+                });
+            }
             if (colHeaderRowCount > 1) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
@@ -306,13 +308,15 @@ function renderHeader(table, tree, config) {
             }
             
             // Add row dimension headers to the last header row.
-            rowDims.forEach((d, i) => {
-                const th = document.createElement('th');
-                th.textContent = d.name;
-                th.className = 'row-dim-label';
-                th.classList.add('RDH', `RDH${i + 1}`);
-                lastHeaderRow.appendChild(th);
-            });
+            if (rowDims.length > 0) {
+                rowDims.forEach((d, i) => {
+                    const th = document.createElement('th');
+                    th.textContent = d.name;
+                    th.className = 'row-dim-label';
+                    th.classList.add('RDH', `RDH${i + 1}`);
+                    lastHeaderRow.appendChild(th);
+                });
+            }
 
             // Recursive function to build the column headers.
             function build(node, level, path) {
@@ -369,6 +373,13 @@ function renderHeader(table, tree, config) {
                 th.textContent = "Value";
                 th.classList.add('VH');
                 lastHeaderRow.appendChild(th);
+            }
+
+            if (config.showRowGrandTotal) {
+                const th = document.createElement('th');
+                th.textContent = 'Grand Total';
+                th.classList.add('RGH');
+                headerRows[0].appendChild(th);
             }
             break;
         }

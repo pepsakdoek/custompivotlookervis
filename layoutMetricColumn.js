@@ -66,6 +66,22 @@ function renderBodyMetricColumn(tbody, tree, config) {
     }
 
     function recursiveRender(node, path) {
+        // Handle the edge case where there are no row dimensions.
+        // The data is on the root node itself.
+        if (node.level === -1 && Object.keys(node.children).length === 0) {
+            const tr = tbody.insertRow();
+            tr.classList.add('DR');
+
+            (tree.colDefs || []).forEach(colDef => {
+                const stats = node.metrics[colDef.key];
+                config.metrics.forEach((m, i) => {
+                    const cellValue = stats ? stats[i] : null;
+                    renderMetricCell(tr, cellValue, i, config);
+                });
+            });
+            return; // We're done, no recursion needed.
+        }
+
         let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
 
         sortedChildren.forEach(childNode => {

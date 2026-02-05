@@ -1,8 +1,20 @@
 
 function renderBodyMetricFirstRow(tbody, tree, config) {
     function recursiveRender(node, path) {
-        // Use the shared helper for consistent sorting
-        let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
+        let sortedChildren = Object.values(node.children);
+
+        // For METRIC_FIRST_ROW, the first level's children are the metrics.
+        // They should be sorted by their original index, not by dimension/metric value.
+        if (node.level === -1 && sortedChildren.length > 1) {
+            sortedChildren.sort((a, b) => {
+                const idxA = config.metrics.findIndex(m => m.name === a.value);
+                const idxB = config.metrics.findIndex(m => m.name === b.value);
+                return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+            });
+        } else {
+            // Use the shared helper for consistent sorting on deeper dimension levels
+            sortedChildren = sortChildren(sortedChildren, config.rowSettings[node.level + 1]);
+        }
 
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];

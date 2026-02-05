@@ -1,5 +1,29 @@
 function renderBodyMeasureFirstColumn(tbody, tree, config) {
     function recursiveRender(node, path) {
+        // Handle the edge case where there are no row dimensions.
+        // The data is on the root node itself.
+        if (node.level === -1 && Object.keys(node.children).length === 0) {
+            const tr = tbody.insertRow();
+            tr.classList.add('DR');
+
+            // When there are no col dims, colDefs needs to be built from metrics
+            const colDefs = config.colDims.length === 0
+                ? config.metrics.map(m => ({ key: m.name, isSubtotal: false }))
+                : (tree.colDefs || []);
+
+            colDefs.forEach(colDef => {
+                const metricValues = node.metrics[colDef.key];
+                const metricIndex = config.metrics.findIndex(m => m.name === colDef.key);
+                const cell = tr.insertCell();
+                cell.classList.add('MC', `MC${metricIndex + 1}`);
+                const val = getAggregatedValue(metricValues ? metricValues[0] : null, 'SUM');
+                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                cell.textContent = formatMetricValue(val, formatType);
+            });
+
+            return; // We're done.
+        }
+
         const sortConfig = config.rowSettings[node.level + 1];
         let sortedChildren = Object.values(node.children);
         if (sortConfig) {

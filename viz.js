@@ -1,4 +1,4 @@
-﻿!function(e,R){"object"==typeof exports&&"object"==typeof module?module.exports=R():"function"==typeof define&&define.amd?define("dscc",[],R):"object"==typeof exports?exports.dscc=R():e.dscc=R()}(window,function(){return t={},n.m=C={"./src/index.ts":
+!function(e,R){"object"==typeof exports&&"object"==typeof module?module.exports=R():"function"==typeof define&&define.amd?define("dscc",[],R):"object"==typeof exports?exports.dscc=R():e.dscc=R()}(window,function(){return t={},n.m=C={"./src/index.ts":
 /*!**********************!*\
   !*** ./src/index.ts ***!
   \**********************/
@@ -689,6 +689,22 @@ function renderBodyMetricColumn(tbody, tree, config) {
     }
 
     function recursiveRender(node, path) {
+        // Handle the edge case where there are no row dimensions.
+        // The data is on the root node itself.
+        if (node.level === -1 && Object.keys(node.children).length === 0) {
+            const tr = tbody.insertRow();
+            tr.classList.add('DR');
+
+            (tree.colDefs || []).forEach(colDef => {
+                const stats = node.metrics[colDef.key];
+                config.metrics.forEach((m, i) => {
+                    const cellValue = stats ? stats[i] : null;
+                    renderMetricCell(tr, cellValue, i, config);
+                });
+            });
+            return; // We're done, no recursion needed.
+        }
+
         let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
 
         sortedChildren.forEach(childNode => {
@@ -979,6 +995,30 @@ function renderBodyMetricRow(tbody, tree, config) {
 
 function renderBodyMeasureFirstColumn(tbody, tree, config) {
     function recursiveRender(node, path) {
+        // Handle the edge case where there are no row dimensions.
+        // The data is on the root node itself.
+        if (node.level === -1 && Object.keys(node.children).length === 0) {
+            const tr = tbody.insertRow();
+            tr.classList.add('DR');
+
+            // When there are no col dims, colDefs needs to be built from metrics
+            const colDefs = config.colDims.length === 0
+                ? config.metrics.map(m => ({ key: m.name, isSubtotal: false }))
+                : (tree.colDefs || []);
+
+            colDefs.forEach(colDef => {
+                const metricValues = node.metrics[colDef.key];
+                const metricIndex = config.metrics.findIndex(m => m.name === colDef.key);
+                const cell = tr.insertCell();
+                cell.classList.add('MC', `MC${metricIndex + 1}`);
+                const val = getAggregatedValue(metricValues ? metricValues[0] : null, 'SUM');
+                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
+                cell.textContent = formatMetricValue(val, formatType);
+            });
+
+            return; // We're done.
+        }
+
         const sortConfig = config.rowSettings[node.level + 1];
         let sortedChildren = Object.values(node.children);
         if (sortConfig) {
@@ -1092,8 +1132,20 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
 
 function renderBodyMetricFirstRow(tbody, tree, config) {
     function recursiveRender(node, path) {
-        // Use the shared helper for consistent sorting
-        let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
+        let sortedChildren = Object.values(node.children);
+
+        // For METRIC_FIRST_ROW, the first level's children are the metrics.
+        // They should be sorted by their original index, not by dimension/metric value.
+        if (node.level === -1 && sortedChildren.length > 1) {
+            sortedChildren.sort((a, b) => {
+                const idxA = config.metrics.findIndex(m => m.name === a.value);
+                const idxB = config.metrics.findIndex(m => m.name === b.value);
+                return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+            });
+        } else {
+            // Use the shared helper for consistent sorting on deeper dimension levels
+            sortedChildren = sortChildren(sortedChildren, config.rowSettings[node.level + 1]);
+        }
 
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
@@ -1214,13 +1266,15 @@ function renderHeader(table, tree, config) {
             }
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
-            rowDims.forEach((d, i) => {
-                const th = document.createElement('th');
-                th.textContent = d.name;
-                th.className = 'row-dim-label';
-                th.classList.add('RDH', `RDH${i + 1}`);
-                lastHeaderRow.appendChild(th);
-            });
+            if (rowDims.length > 0) {
+                rowDims.forEach((d, i) => {
+                    const th = document.createElement('th');
+                    th.textContent = d.name;
+                    th.className = 'row-dim-label';
+                    th.classList.add('RDH', `RDH${i + 1}`);
+                    lastHeaderRow.appendChild(th);
+                });
+            }
             if (colHeaderRowCount > 1) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
@@ -1481,13 +1535,15 @@ function renderHeader(table, tree, config) {
             }
             
             // Add row dimension headers to the last header row.
-            rowDims.forEach((d, i) => {
-                const th = document.createElement('th');
-                th.textContent = d.name;
-                th.className = 'row-dim-label';
-                th.classList.add('RDH', `RDH${i + 1}`);
-                lastHeaderRow.appendChild(th);
-            });
+            if (rowDims.length > 0) {
+                rowDims.forEach((d, i) => {
+                    const th = document.createElement('th');
+                    th.textContent = d.name;
+                    th.className = 'row-dim-label';
+                    th.classList.add('RDH', `RDH${i + 1}`);
+                    lastHeaderRow.appendChild(th);
+                });
+            }
 
             // Recursive function to build the column headers.
             function build(node, level, path) {
@@ -1545,6 +1601,13 @@ function renderHeader(table, tree, config) {
                 th.classList.add('VH');
                 lastHeaderRow.appendChild(th);
             }
+
+            if (config.showRowGrandTotal) {
+                const th = document.createElement('th');
+                th.textContent = 'Grand Total';
+                th.classList.add('RGH');
+                headerRows[0].appendChild(th);
+            }
             break;
         }
     }
@@ -1583,8 +1646,8 @@ function debugLog(...args) {
 }
 const devMode = true;
 
-
 function drawViz(data) {
+
     const container = document.getElementById('viz-container');
     container.innerHTML = ''; // Clear only the container in case of re-render
     container.style.fontFamily = data.theme.themeFontFamily;
