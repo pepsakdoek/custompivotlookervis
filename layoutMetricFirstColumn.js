@@ -25,10 +25,8 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
         }
 
         const sortConfig = config.rowSettings[node.level + 1];
-        let sortedChildren = Object.values(node.children);
-        if (sortConfig) {
-            // TODO : Sorting
-        }
+        let sortedChildren = sortChildren(Object.values(node.children), sortConfig);
+
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
@@ -44,7 +42,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 });
 
                 // Render metric values for this row
-                (tree.colDefs || []).forEach(colDef => {
+                (tree.colDefs || []).reverse().forEach(colDef => {
                     const metricValues = childNode.metrics[colDef.key];
                     const cell = tr.insertCell();
                 
@@ -62,8 +60,6 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                     if (!metricValues || !metricValues[0]) {
                         cell.textContent = '-';
                     } else {
-                        // In METRIC_FIRST_COLUMN, the aggregation happens in the tree builder.
-                        // We assume 'SUM' here to extract the value, consistent with other layouts.
                         const val = getAggregatedValue(metricValues[0], 'SUM');
                         const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                         const formatted = formatMetricValue(val, formatType);

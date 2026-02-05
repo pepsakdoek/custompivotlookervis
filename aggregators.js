@@ -248,7 +248,17 @@ function getFinalColKeys(node, path, config) {
     const settings = config.colSettings;
     const sortConfig = settings[node.level + 1];
     let sortedChildren = Object.values(node.children);
-    // Sort children based on config
+
+    // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
+    // and should be sorted by their original index, not name.
+    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
+        sortedChildren.sort((a, b) => {
+            const idxA = config.metrics.findIndex(m => m.name === a.value);
+            const idxB = config.metrics.findIndex(m => m.name === b.value);
+            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+        });
+    }
+    // Otherwise, sort children based on user-defined config
     if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
         sortedChildren.sort((a, b) => {
             let valA, valB;

@@ -321,8 +321,18 @@ function renderHeader(table, tree, config) {
             // Recursive function to build the column headers.
             function build(node, level, path) {
                 // level 0: metrics, level 1+: colDims
-                let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
-                
+                let sortedChildren = Object.values(node.children);
+
+                // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
+                // and should be sorted by their original index, not name.
+                if (level === 0 && sortedChildren.length > 1) {
+                    sortedChildren.sort((a, b) => {
+                        const idxA = config.metrics.findIndex(m => m.name === a.value);
+                        const idxB = config.metrics.findIndex(m => m.name === b.value);
+                        return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+                    });
+                }
+
                 sortedChildren.forEach((child, i) => {
                     const th = document.createElement('th');
                     th.textContent = child.value;

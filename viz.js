@@ -274,7 +274,17 @@ function getFinalColKeys(node, path, config) {
     const settings = config.colSettings;
     const sortConfig = settings[node.level + 1];
     let sortedChildren = Object.values(node.children);
-    // Sort children based on config
+
+    // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
+    // and should be sorted by their original index, not name.
+    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
+        sortedChildren.sort((a, b) => {
+            const idxA = config.metrics.findIndex(m => m.name === a.value);
+            const idxB = config.metrics.findIndex(m => m.name === b.value);
+            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+        });
+    }
+    // Otherwise, sort children based on user-defined config
     if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
         sortedChildren.sort((a, b) => {
             let valA, valB;
@@ -1020,10 +1030,8 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
         }
 
         const sortConfig = config.rowSettings[node.level + 1];
-        let sortedChildren = Object.values(node.children);
-        if (sortConfig) {
-            // TODO : Sorting
-        }
+        let sortedChildren = sortChildren(Object.values(node.children), sortConfig);
+
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
@@ -1039,7 +1047,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 });
 
                 // Render metric values for this row
-                (tree.colDefs || []).forEach(colDef => {
+                (tree.colDefs || []).reverse().forEach(colDef => {
                     const metricValues = childNode.metrics[colDef.key];
                     const cell = tr.insertCell();
                 
@@ -1057,8 +1065,6 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                     if (!metricValues || !metricValues[0]) {
                         cell.textContent = '-';
                     } else {
-                        // In METRIC_FIRST_COLUMN, the aggregation happens in the tree builder.
-                        // We assume 'SUM' here to extract the value, consistent with other layouts.
                         const val = getAggregatedValue(metricValues[0], 'SUM');
                         const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
                         const formatted = formatMetricValue(val, formatType);
@@ -1548,8 +1554,18 @@ function renderHeader(table, tree, config) {
             // Recursive function to build the column headers.
             function build(node, level, path) {
                 // level 0: metrics, level 1+: colDims
-                let sortedChildren = sortChildren(Object.values(node.children), config.colSettings[node.level + 1]);
-                
+                let sortedChildren = Object.values(node.children);
+
+                // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
+                // and should be sorted by their original index, not name.
+                if (level === 0 && sortedChildren.length > 1) {
+                    sortedChildren.sort((a, b) => {
+                        const idxA = config.metrics.findIndex(m => m.name === a.value);
+                        const idxB = config.metrics.findIndex(m => m.name === b.value);
+                        return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+                    });
+                }
+
                 sortedChildren.forEach((child, i) => {
                     const th = document.createElement('th');
                     th.textContent = child.value;
