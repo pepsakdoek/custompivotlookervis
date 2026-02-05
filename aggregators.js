@@ -251,13 +251,13 @@ function getFinalColKeys(node, path, config) {
 
     // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
     // and should be sorted by their original index, not name.
-    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
-        sortedChildren.sort((a, b) => {
-            const idxA = config.metrics.findIndex(m => m.name === a.value) ?? Infinity;
-            const idxB = config.metrics.findIndex(m => m.name === b.value) ?? Infinity;
-            return idxA - idxB;
-        });
-    }
+    // if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
+    //     sortedChildren.sort((a, b) => {
+    //         const idxA = config.metrics.findIndex(m => m.name === a.value) ?? Infinity;
+    //         const idxB = config.metrics.findIndex(m => m.name === b.value) ?? Infinity;
+    //         return idxA - idxB;
+    //     });
+    // }
     // Otherwise, sort children based on user-defined config
     if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
         sortedChildren.sort((a, b) => {
@@ -288,12 +288,12 @@ function getFinalColKeys(node, path, config) {
     }
     // Recursive step: get keys from children.
     let finalKeys;
-    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level > -1) {
-        // For METRIC_FIRST_COLUMN, we need to process children in reverse to get the correct visual order
-        finalKeys = sortedChildren.reverse().flatMap(child => getFinalColKeys(child, [...path, child.value], config));
-    } else {
+    // if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level > -1) {
+    //     // For METRIC_FIRST_COLUMN, we need to process children in reverse to get the correct visual order
+    //     finalKeys = sortedChildren.reverse().flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    // } else {
         finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
-    }
+    // }
 
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];

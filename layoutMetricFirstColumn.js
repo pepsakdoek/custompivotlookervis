@@ -1,4 +1,4 @@
-function renderBodyMeasureFirstColumn(tbody, tree, config) {
+function renderBodymetricFirstColumn(tbody, tree, config) {
     function recursiveRender(node, path) {
         // Handle the edge case where there are no row dimensions.
         // The data is on the root node itself.
@@ -43,6 +43,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
 
                 // Render metric values for this row
                 (tree.colDefs || []).forEach(colDef => {
+                    debugLog('Processing colDef:', colDef);
                     const metricValues = childNode.metrics[colDef.key];
                     const cell = tr.insertCell();
                 
@@ -87,7 +88,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                         subtotalRow.insertCell().textContent = '';
                     }
                 }
-                const rowDimCount = (config.rowDims?.length || 0) + (config.measureLayout.includes('ROW') ? 1 : 0);
+                const rowDimCount = (config.rowDims?.length || 0) + (config.metricLayout.includes('ROW') ? 1 : 0);
                 for (let i = dimensionLevel + 1; i < rowDimCount; i++) subtotalRow.insertCell();
 
                 // Render metric values for this subtotal

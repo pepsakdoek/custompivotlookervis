@@ -1,7 +1,7 @@
 {
   "name": "Pep Custom Pivot",
   "organization": "Pep",
-  "description": "Pivot table where you can set measures to be rows or columns.",
+  "description": "Pivot table where you can set metrics to be rows or columns.",
   "logoUrl": "https://storage.googleapis.com/custompivot/custompivotlookervis/logo.png",
   "packageUrl": "https://github.com/pepsakdoek/custompivotlookervis",
   "supportUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki",

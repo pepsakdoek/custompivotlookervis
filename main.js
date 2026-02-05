@@ -3,18 +3,18 @@
 function renderBody(table, tree, config) {
     const tbody = table.createTBody();
     
-    switch(config.measureLayout) {
+    switch(config.metricLayout) {
         case 'METRIC_ROW':
             debugLog('Rendering body with METRIC_ROW layout');
             renderBodyMetricRow(tbody, tree, config);
             break;
         case 'METRIC_FIRST_ROW':
-            debugLog('Rendering body with MEASURE_FIRST_ROW layout');
+            debugLog('Rendering body with metric_FIRST_ROW layout');
             renderBodyMetricFirstRow(tbody, tree, config);
             break;
         case 'METRIC_FIRST_COLUMN':
-            debugLog('Rendering body with MEASURE_FIRST_COLUMN layout');
-            renderBodyMeasureFirstColumn(tbody, tree, config);
+            debugLog('Rendering body with metric_FIRST_COLUMN layout');
+            renderBodymetricFirstColumn(tbody, tree, config);
             break;
         case 'METRIC_COLUMN':
         default:
@@ -59,7 +59,7 @@ function drawViz(data) {
     const conditionalFormatting = getStyleValue(style, 'conditionalFormatting', '');
     
     const config = {
-        measureLayout: getStyleValue(style, 'measureLayout', 'METRIC_COLUMN'),
+        metricLayout: getStyleValue(style, 'metricLayout', 'METRIC_COLUMN'),
         rowDims: fields.dimensions || [],
         colDims: fields.columnDimensions || [],
         metrics: fields.metrics || [],
@@ -127,7 +127,7 @@ function applyStickyHeaders(table, config, theme) {
 
     // 2. Sticky Columns (Left)
     let stickyColCount = config.rowDims.length;
-    if (config.measureLayout === 'METRIC_ROW' || config.measureLayout === 'METRIC_FIRST_ROW') {
+    if (config.metricLayout === 'METRIC_ROW' || config.metricLayout === 'METRIC_FIRST_ROW') {
         stickyColCount += 1;
     }
 

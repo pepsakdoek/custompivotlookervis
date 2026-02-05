@@ -26,11 +26,11 @@ function buildDataTree(config, data) {
             return isNaN(v) ? 0 : v;
         });
 
-        const measureLayout = config.measureLayout;
+        const metricLayout = config.metricLayout;
 
         // --- UPDATED BRANCHING LOGIC ---
         
-        if (measureLayout === 'METRIC_ROW' && allMetrics.length > 0) {
+        if (metricLayout === 'METRIC_ROW' && allMetrics.length > 0) {
             // METRIC_ROW: The Metric Name is appended to the ROW path
             allMetrics.forEach((metric, i) => {
                 // We pass only the single metric value [metricValues[i]] 
@@ -38,13 +38,13 @@ function buildDataTree(config, data) {
                 processNode(tree, [...rowDims, metric.name], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_ROW' && allMetrics.length > 0) {
+        else if (metricLayout === 'METRIC_FIRST_ROW' && allMetrics.length > 0) {
             // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
             allMetrics.forEach((metric, i) => {
                 processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
             });
         } 
-        else if (measureLayout === 'METRIC_FIRST_COLUMN' && allMetrics.length > 0) {
+        else if (metricLayout === 'METRIC_FIRST_COLUMN' && allMetrics.length > 0) {
             // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
             allMetrics.forEach((metric, i) => {
                 processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);

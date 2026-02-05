@@ -67,8 +67,8 @@
       "label": "Pivot Controls",
       "elements": [
         {
-          "id": "measureLayout",
-          "label": "Measure Display",
+          "id": "metricLayout",
+          "label": "Metric Display",
           "type": "SELECT_SINGLE",
           "defaultValue": "METRIC_COLUMN",
           "options": [
@@ -598,7 +598,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -671,7 +671,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -744,7 +744,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -817,7 +817,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -890,7 +890,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -969,7 +969,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -1042,7 +1042,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -1115,7 +1115,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -1188,7 +1188,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]
@@ -1261,7 +1261,7 @@
               "value": "DIMENSION"
             },
             {
-              "label": "Measure",
+              "label": "Metric",
               "value": "METRIC"
             }
           ]

@@ -67,10 +67,10 @@ function renderBodyMetricRow(tbody, tree, config) {
                 for (let i = 0; i < remainingDims; i++) tr.insertCell();
             }
 
-            // Measure Name
-            const measureCell = tr.insertCell();
-            measureCell.textContent = metric.name;
-            measureCell.classList.add('MNC', `MNC${mIdx + 1}`);
+            // metric Name
+            const metricCell = tr.insertCell();
+            metricCell.textContent = metric.name;
+            metricCell.classList.add('MNC', `MNC${mIdx + 1}`);
 
             // Values
             (tree.colDefs || []).forEach(colDef => {
@@ -121,11 +121,11 @@ function renderBodyMetricRow(tbody, tree, config) {
                 const tr = tbody.insertRow();
                 tr.classList.add('DR');
                 
-                // 1. Fill Dimension and Measure Name values from the path
+                // 1. Fill Dimension and metric Name values from the path
                 newPath.forEach((val, i) => {
                     const cell = tr.insertCell();
                     cell.textContent = val;
-                    // The last item in the path is the measure name
+                    // The last item in the path is the metric name
                     if (i === newPath.length - 1) {
                         const mIdx = config.metrics.findIndex(m => m.name === val);
                         cell.classList.add('MNC', `MNC${mIdx + 1}`);
@@ -134,7 +134,7 @@ function renderBodyMetricRow(tbody, tree, config) {
                     }
                 });
 
-                // 2. Pad empty cells if the path is shorter than the full row dimension depth + measure column.
+                // 2. Pad empty cells if the path is shorter than the full row dimension depth + metric column.
                 const expectedDimCols = (config.rowDims.length || 0) + 1;
                 for (let i = newPath.length; i < expectedDimCols; i++) {
                     tr.insertCell();
