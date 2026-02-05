@@ -4,6 +4,7 @@
 
 # 1. Define the list of files to be concatenated in the correct order.
 files=(
+    "./vizbuildnote.text.js"
     "./dscc.min.js"
     "./aggregators.js"
     "./treeBuilder.js"

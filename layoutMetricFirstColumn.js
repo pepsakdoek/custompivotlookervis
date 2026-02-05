@@ -42,7 +42,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 });
 
                 // Render metric values for this row
-                (tree.colDefs || []).reverse().forEach(colDef => {
+                (tree.colDefs || []).forEach(colDef => {
                     const metricValues = childNode.metrics[colDef.key];
                     const cell = tr.insertCell();
                 
@@ -56,7 +56,6 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                     }
                 
                     cell.classList.add('MC', `MC${metricIndex + 1}`);
-                
                     if (!metricValues || !metricValues[0]) {
                         cell.textContent = '-';
                     } else {

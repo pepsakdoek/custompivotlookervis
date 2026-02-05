@@ -48,7 +48,7 @@ function renderHeader(table, tree, config) {
                     lastHeaderRow.appendChild(th);
                 });
             }
-            if (colHeaderRowCount > 1) {
+            if (colHeaderRowCount > 1 && rowDims.length > 0) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1;
@@ -299,7 +299,7 @@ function renderHeader(table, tree, config) {
             const lastHeaderRow = headerRows[headerRows.length - 1];
 
             // If there are column headers, add a top-left spacer above the row dimension labels.
-            if (colHeaderRowCount > 1) {
+            if (colHeaderRowCount > 1 && rowDims.length > 0) {
                 const topLeft = document.createElement('th');
                 topLeft.colSpan = rowDims.length;
                 topLeft.rowSpan = colHeaderRowCount - 1; // Span all rows except the last one.
@@ -331,12 +331,18 @@ function renderHeader(table, tree, config) {
                         const idxB = config.metrics.findIndex(m => m.name === b.value);
                         return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
                     });
+                } else if (level > 0) {
+                    // For subsequent levels (column dimensions), use the standard sorting function
+                    sortedChildren = sortChildren(sortedChildren, config.colSettings[node.level + 1]);
                 }
 
-                sortedChildren.forEach((child, i) => {
+                sortedChildren.forEach(child => {
                     const th = document.createElement('th');
                     th.textContent = child.value;
                     th.colSpan = getLeafCount(child);
+                    // For level 0 (metrics), find the original index for stable CSS classes
+                    const metricIndex = level === 0 ? config.metrics.findIndex(m => m.name === child.value) : -1;
+                    const i = metricIndex !== -1 ? metricIndex : 0;
                     if (level === 0) {
                         th.classList.add('MH', `MH${i + 1}`);
                     } else {

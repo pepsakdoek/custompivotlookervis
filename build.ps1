@@ -4,6 +4,7 @@ if (Test-Path "./viz.js") { Remove-Item "./viz.js" }
 # 2. Concatenate files in order
 # We use -Raw to ensure no extra newlines are injected between files
 $files = @(
+    "./vizbuildnote.text.js",
     "./dscc.min.js",
     "./aggregators.js", 
     "./treeBuilder.js", 
