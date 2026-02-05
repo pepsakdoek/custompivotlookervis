@@ -281,9 +281,9 @@ function getFinalColKeys(node, path, config) {
     // and should be sorted by their original index, not name.
     if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
         sortedChildren.sort((a, b) => {
-            const idxA = config.metrics.findIndex(m => m.name === a.value);
-            const idxB = config.metrics.findIndex(m => m.name === b.value);
-            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+            const idxA = config.metrics.findIndex(m => m.name === a.value) ?? Infinity;
+            const idxB = config.metrics.findIndex(m => m.name === b.value) ?? Infinity;
+            return idxA - idxB;
         });
     }
     // Otherwise, sort children based on user-defined config
@@ -315,10 +315,18 @@ function getFinalColKeys(node, path, config) {
         }] : [];
     }
     // Recursive step: get keys from children.
-    let finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    let finalKeys;
+    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level > -1) {
+        // For METRIC_FIRST_COLUMN, we need to process children in reverse to get the correct visual order
+        finalKeys = sortedChildren.reverse().flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    } else {
+        finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    }
+
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+        // Note: debugLog is not a standard function, assuming it's for development.
         debugLog('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),
@@ -1028,7 +1036,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 cell.textContent = formatMetricValue(val, formatType);
             });
 
-            return; // We're done.
+            return; 
         }
 
         const sortConfig = config.rowSettings[node.level + 1];
@@ -1668,11 +1676,14 @@ function debugLog(...args) {
     }
 }
 const devMode = true;
+let loadingOverlay;
 
 function drawViz(data) {
 
+
     const container = document.getElementById('viz-container');
     container.innerHTML = ''; // Clear only the container in case of re-render
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
     container.style.fontFamily = data.theme.themeFontFamily;
     container.style.fontSize = data.theme.themeFontSize;
     container.style.height = '100vh';
@@ -1743,7 +1754,8 @@ function drawViz(data) {
 }
 
 function applyStickyHeaders(table, config, theme) {
-    const bgColor = (theme.themeFillColor && theme.themeFillColor.color) ? theme.themeFillColor.color : '#ffffff';
+    
+    //const bgColor = (theme.themeFillColor && theme.themeFillColor.color) ? theme.themeFillColor.color : '#ffffff';
     
     // 1. Sticky Header Rows (Top)
     const headerRows = Array.from(table.tHead.rows);
@@ -1755,7 +1767,6 @@ function applyStickyHeaders(table, config, theme) {
             cell.style.position = 'sticky';
             cell.style.top = currentTop + 'px';
             cell.style.zIndex = '10';
-            cell.style.backgroundColor = bgColor;
         });
         currentTop += rowRect.height;
     });
@@ -1778,7 +1789,7 @@ function applyStickyHeaders(table, config, theme) {
 
             cell.style.position = 'sticky';
             cell.style.left = currentLeft + 'px';
-            cell.style.backgroundColor = bgColor;
+            // cell.style.backgroundColor = bgColor;
             
             if (row.parentElement.tagName === 'THEAD') {
                 cell.style.zIndex = '12';

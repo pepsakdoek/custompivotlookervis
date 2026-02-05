@@ -30,11 +30,14 @@ function debugLog(...args) {
     }
 }
 const devMode = true;
+let loadingOverlay;
 
 function drawViz(data) {
 
+
     const container = document.getElementById('viz-container');
     container.innerHTML = ''; // Clear only the container in case of re-render
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
     container.style.fontFamily = data.theme.themeFontFamily;
     container.style.fontSize = data.theme.themeFontSize;
     container.style.height = '100vh';
@@ -105,7 +108,8 @@ function drawViz(data) {
 }
 
 function applyStickyHeaders(table, config, theme) {
-    const bgColor = (theme.themeFillColor && theme.themeFillColor.color) ? theme.themeFillColor.color : '#ffffff';
+    
+    //const bgColor = (theme.themeFillColor && theme.themeFillColor.color) ? theme.themeFillColor.color : '#ffffff';
     
     // 1. Sticky Header Rows (Top)
     const headerRows = Array.from(table.tHead.rows);
@@ -117,7 +121,6 @@ function applyStickyHeaders(table, config, theme) {
             cell.style.position = 'sticky';
             cell.style.top = currentTop + 'px';
             cell.style.zIndex = '10';
-            cell.style.backgroundColor = bgColor;
         });
         currentTop += rowRect.height;
     });
@@ -140,7 +143,7 @@ function applyStickyHeaders(table, config, theme) {
 
             cell.style.position = 'sticky';
             cell.style.left = currentLeft + 'px';
-            cell.style.backgroundColor = bgColor;
+            // cell.style.backgroundColor = bgColor;
             
             if (row.parentElement.tagName === 'THEAD') {
                 cell.style.zIndex = '12';

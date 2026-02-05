@@ -7,7 +7,7 @@
   "supportUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki",
   "privacyPolicyUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Privacy",
   "termsOfServiceUrl": "https://github.com/pepsakdoek/custompivotlookervis/wiki/Terms",
-  "devMode": false,
+  "devMode": true,
   "components": [
     {
       "id": "pepCustomPivot",

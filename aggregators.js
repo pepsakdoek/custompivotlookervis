@@ -253,9 +253,9 @@ function getFinalColKeys(node, path, config) {
     // and should be sorted by their original index, not name.
     if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
         sortedChildren.sort((a, b) => {
-            const idxA = config.metrics.findIndex(m => m.name === a.value);
-            const idxB = config.metrics.findIndex(m => m.name === b.value);
-            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+            const idxA = config.metrics.findIndex(m => m.name === a.value) ?? Infinity;
+            const idxB = config.metrics.findIndex(m => m.name === b.value) ?? Infinity;
+            return idxA - idxB;
         });
     }
     // Otherwise, sort children based on user-defined config
@@ -287,10 +287,18 @@ function getFinalColKeys(node, path, config) {
         }] : [];
     }
     // Recursive step: get keys from children.
-    let finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    let finalKeys;
+    if (config.measureLayout === 'METRIC_FIRST_COLUMN' && node.level > -1) {
+        // For METRIC_FIRST_COLUMN, we need to process children in reverse to get the correct visual order
+        finalKeys = sortedChildren.reverse().flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    } else {
+        finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
+    }
+
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
+        // Note: debugLog is not a standard function, assuming it's for development.
         debugLog('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),

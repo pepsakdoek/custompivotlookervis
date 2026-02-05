@@ -21,7 +21,7 @@ function renderBodyMeasureFirstColumn(tbody, tree, config) {
                 cell.textContent = formatMetricValue(val, formatType);
             });
 
-            return; // We're done.
+            return; 
         }
 
         const sortConfig = config.rowSettings[node.level + 1];
