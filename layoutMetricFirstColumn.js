@@ -1,131 +1,183 @@
 function renderBodymetricFirstColumn(tbody, tree, config) {
+    debugLog('=== renderBodymetricFirstColumn START ===');
+
+    function renderTotalsRow(node, isGrandTotal) {
+        debugLog(`--- renderTotalsRow called: isGrandTotal=${isGrandTotal}, node.value=${node.value}, node.level=${node.level}`);
+        const tr = tbody.insertRow();
+        tr.style.fontWeight = 'bold';
+
+        if (isGrandTotal) {
+            tr.classList.add('CGR');
+            const labelCell = tr.insertCell();
+            labelCell.textContent = 'Grand Total';
+            labelCell.classList.add('CGL');
+            for (let i = 1; i < config.rowDims.length; i++) {
+                tr.insertCell();
+            }
+        } else {
+            tr.classList.add('RSR');
+            for (let i = 0; i < node.level; i++) tr.insertCell();
+            const labelCell = tr.insertCell();
+            labelCell.textContent = 'Subtotal ' + node.value;
+            labelCell.classList.add('RSL');
+            for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
+        }
+
+        (tree.colDefs || []).forEach(colDef => {
+            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
+            
+            const keyParts = colDef.key.split('||');
+            const metricName = keyParts[0];
+            const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+            if (metricIndex === -1) {
+                tr.insertCell().textContent = '?';
+                return;
+            }
+
+            const aggString = config.metricSubtotalAggs[metricIndex] || 'SUM';
+            const aggTypeUpper = aggString.toUpperCase().trim();
+            const cell = tr.insertCell();
+            if (!isGrandTotal) {
+                cell.classList.add('RSV', `RSV${metricIndex + 1}`);
+            } else {
+                cell.classList.add('CGV', `CGV${metricIndex + 1}`);
+            }
+
+            let val;
+            if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                val = getAggregatedValue(nodeStats ? nodeStats[0] : null, aggTypeUpper || 'SUM');
+            } else {
+                val = getCustomAggregatedValue(aggString, nodeStats, config);
+            }
+
+            cell.textContent = formatMetricValue(val, config.metricFormats[metricIndex]);
+        });
+
+        if (config.showRowGrandTotal) {
+            // For METRIC_FIRST_COLUMN, the grand total is a single value per metric.
+            // We can iterate through metrics and calculate their total.
+            const grandTotalStats = getAggregatedNodeMetricsAllCols(node, config);
+
+            config.metrics.forEach((m, i) => {
+                const aggString = config.metricSubtotalAggs[i] || 'SUM';
+                const cell = tr.insertCell();
+                cell.style.fontWeight = 'bold';
+                if (isGrandTotal) {
+                    cell.classList.add('RGV', `RGV${i + 1}`);
+                } else {
+                    // This is for the subtotal's row grand total cell
+                    cell.classList.add('RGV', `RGV${i + 1}`);
+                }
+
+                let val;
+                const aggTypeUpper = aggString.toUpperCase().trim();
+                if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                    val = getAggregatedValue(grandTotalStats ? grandTotalStats[i] : null, aggTypeUpper || 'SUM');
+                } else {
+                    val = getCustomAggregatedValue(aggString, grandTotalStats, config);
+                }
+                cell.textContent = formatMetricValue(val, config.metricFormats[i]);
+            });
+        }
+    }
+
     function recursiveRender(node, path) {
-        // Handle the edge case where there are no row dimensions.
-        // The data is on the root node itself.
-        if (node.level === -1 && Object.keys(node.children).length === 0) {
+        debugLog(`>>> recursiveRender: path=[${path}], node.level=${node.level}, children count=${Object.keys(node.children).length}`);
+        
+        // EDGE CASE for no row dims
+        if (config.rowDims.length === 0 && path.length === 0 && node.level === -1) {
+            debugLog(`  >> Special case: 0 row dims, rendering single row from rowRoot`);
             const tr = tbody.insertRow();
             tr.classList.add('DR');
 
-            // When there are no col dims, colDefs needs to be built from metrics
-            const colDefs = config.colDims.length === 0
-                ? config.metrics.map(m => ({ key: m.name, isSubtotal: false }))
-                : (tree.colDefs || []);
+            renderMetricCellsForRow(tr, node, config);
 
-            colDefs.forEach(colDef => {
-                const metricValues = node.metrics[colDef.key];
-                const metricIndex = config.metrics.findIndex(m => m.name === colDef.key);
-                const cell = tr.insertCell();
-                cell.classList.add('MC', `MC${metricIndex + 1}`);
-                const val = getAggregatedValue(metricValues ? metricValues[0] : null, 'SUM');
-                const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                cell.textContent = formatMetricValue(val, formatType);
-            });
-
-            return; 
+            if (config.showRowGrandTotal) {
+                renderRowGrandTotal(tr, node, config, true);
+            }
+            return;
         }
 
-        const sortConfig = config.rowSettings[node.level + 1];
-        let sortedChildren = sortChildren(Object.values(node.children), sortConfig);
+
+        let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
 
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
-
-            // Only render a data row if this is a leaf node
+            
+            debugLog(`  > Child: value="${childNode.value}", isLeaf=${isLeaf}, newPath=[${newPath}]`);
             if (isLeaf) {
                 const tr = tbody.insertRow();
                 tr.classList.add('DR');
+
                 newPath.forEach((val, i) => {
                     const cell = tr.insertCell();
                     cell.textContent = val;
                     cell.classList.add('RDC', `RDC${i + 1}`);
                 });
+                const rowDimCount = config.rowDims?.length || 0;
+                for (let i = newPath.length; i < rowDimCount; i++) tr.insertCell();
 
-                // Render metric values for this row
-                (tree.colDefs || []).forEach(colDef => {
-                    debugLog('Processing colDef:', colDef);
-                    const metricValues = childNode.metrics[colDef.key];
-                    const cell = tr.insertCell();
-                
-                    const keyParts = colDef.key.split('||');
-                    const metricName = keyParts[0];
-                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
-                
-                    if (metricIndex === -1) {
-                        cell.textContent = '?';
-                        return;
-                    }
-                
-                    cell.classList.add('MC', `MC${metricIndex + 1}`);
-                    if (!metricValues || !metricValues[0]) {
-                        cell.textContent = '-';
-                    } else {
-                        const val = getAggregatedValue(metricValues[0], 'SUM');
-                        const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                        const formatted = formatMetricValue(val, formatType);
-                        cell.textContent = formatted;
-                    }
-                });
-            } else {
-                // Not a leaf: recurse into children first
-                recursiveRender(childNode, newPath);
-            }
+                renderMetricCellsForRow(tr, childNode, config);
 
-            // Render row subtotal
-            const dimensionLevel = childNode.level;
-            const subtotalConfig = config.rowSettings[dimensionLevel];
-            if (subtotalConfig && subtotalConfig.subtotal === true && Object.keys(childNode.children).length > 0) {
-                const subtotalRow = tbody.insertRow();
-                subtotalRow.style.fontWeight = 'bold';
-                subtotalRow.classList.add('RSR');
-                
-                for (let i = 0; i < dimensionLevel + 1; i++) {
-                    if (i === dimensionLevel) {
-                        const cell = subtotalRow.insertCell();
-                        cell.textContent = `Subtotal ${childNode.value}`;
-                        cell.classList.add('RSL');
-                    } else {
-                        subtotalRow.insertCell().textContent = '';
-                    }
+                if (config.showRowGrandTotal) {
+                    renderRowGrandTotal(tr, childNode, config);
                 }
-                const rowDimCount = (config.rowDims?.length || 0) + (config.metricLayout.includes('ROW') ? 1 : 0);
-                for (let i = dimensionLevel + 1; i < rowDimCount; i++) subtotalRow.insertCell();
+            } else {
+                recursiveRender(childNode, newPath);
 
-                // Render metric values for this subtotal
-                (tree.colDefs || []).forEach(colDef => {
-                    const aggregatedMetricsArray = getAggregatedNodeMetrics(childNode, colDef.key, config, colDef.isSubtotal);
-                    const cell = subtotalRow.insertCell();
-
-                    const keyParts = colDef.key.split('||');
-                    const metricName = keyParts[0];
-                    const metricIndex = config.metrics.findIndex(m => m.name === metricName);
-
-                    if (metricIndex === -1) {
-                        cell.textContent = '?';
-                        return;
-                    }
-
-                    cell.classList.add('RSV', `RSV${metricIndex + 1}`);
-
-                    const aggregatedMetrics = aggregatedMetricsArray ? aggregatedMetricsArray[metricIndex] : null;
-
-                    if (!aggregatedMetrics) {
-                        cell.textContent = '-';
-                    } else {
-                        const metricAgg = config.metricSubtotalAggs[metricIndex] || 'NONE';
-                        let val;
-                        if (metricAgg === 'NONE') {
-                            val = '-';
-                        } else {
-                            val = getAggregatedValue(aggregatedMetrics, metricAgg);
-                            const formatType = config.metricFormats[metricIndex] || 'DEFAULT';
-                            val = formatMetricValue(val, formatType);
-                        }
-                        cell.textContent = val;
-                    }
-                });
+                const settings = config.rowSettings[childNode.level];
+                debugLog(`  >> Checking subtotal for level ${childNode.level}:`, settings);
+                if (settings && settings.subtotal) {
+                    renderTotalsRow(childNode, false);
+                }
             }
         });
     }
+
+    function renderMetricCellsForRow(tr, node, config) {
+        (tree.colDefs || []).forEach(colDef => {
+            const stats = colDef.isSubtotal 
+                ? getAggregatedNodeMetrics(node, colDef.key, config, true) 
+                : node.metrics[colDef.key];
+            
+            const keyParts = colDef.key.split('||');
+            const metricName = keyParts[0];
+            const metricIndex = config.metrics.findIndex(m => m.name === metricName);
+
+            const cellValue = stats ? stats[0] : null; // In this layout, each colDef is for one metric
+            renderMetricCell(tr, cellValue, metricIndex, config);
+        });
+    }
+
+    function renderRowGrandTotal(tr, node, config, isZeroRowDimCase = false) {
+        const grandTotalStats = getAggregatedNodeMetricsAllCols(node, config);
+
+        config.metrics.forEach((m, i) => {
+            const aggString = config.metricSubtotalAggs[i] || 'SUM';
+            const aggTypeUpper = aggString.toUpperCase().trim();
+            const cell = tr.insertCell();
+            cell.style.fontWeight = 'bold';
+            cell.classList.add('RGV', `RGV${i + 1}`);
+
+            let val;
+            if (!grandTotalStats || !grandTotalStats[i]) {
+                val = null;
+            } else if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
+                val = getAggregatedValue(grandTotalStats[i], aggTypeUpper || 'SUM');
+            } else {
+                val = getCustomAggregatedValue(aggString, grandTotalStats, config);
+            }
+
+            cell.textContent = formatMetricValue(val, config.metricFormats[i]);
+        });
+    }
+
+
     recursiveRender(tree.rowRoot, []);
+
+    if (config.showColumnGrandTotal && config.rowDims.length > 0) {
+        renderTotalsRow(tree.rowRoot, true);
+    }
 }

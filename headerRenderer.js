@@ -216,7 +216,7 @@ function renderHeader(table, tree, config) {
 
             // Add "metric" header first
             const metricTh = document.createElement('th');
-            metricTh.textContent = 'metric';
+            metricTh.textContent = 'Metric';
             metricTh.classList.add('MRH');
             lastHeaderRow.appendChild(metricTh);
 
@@ -394,8 +394,26 @@ function renderHeader(table, tree, config) {
             if (config.showRowGrandTotal) {
                 const th = document.createElement('th');
                 th.textContent = 'Grand Total';
+                th.colSpan = metrics.length;
+                // If there are other column headers, this should span fewer rows
+                // to align with the other top-level headers.
+                if (colHeaderRowCount > 1) {
+                    th.rowSpan = 1; 
+                } else {
+                    th.rowSpan = colHeaderRowCount;
+                }
                 th.classList.add('RGH');
                 headerRows[0].appendChild(th);
+
+                // Add metric names under the grand total header if there are column dimensions
+                if (hasColDims) {
+                    metrics.forEach((m, i) => {
+                        const metricTh = document.createElement('th');
+                        metricTh.textContent = m.name;
+                        metricTh.classList.add('MH', `MH${i + 1}`);
+                        headerRows[1].appendChild(metricTh); // Add to the second header row
+                    });
+                }
             }
             break;
         }

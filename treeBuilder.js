@@ -32,22 +32,28 @@ function buildDataTree(config, data) {
         
         if (metricLayout === 'METRIC_ROW' && allMetrics.length > 0) {
             // METRIC_ROW: The Metric Name is appended to the ROW path
-            allMetrics.forEach((metric, i) => {
+            const sortedMetrics = allMetrics.map((m, i) => ({ metric: m, originalIndex: i }))
+                                            .sort((a, b) => a.originalIndex - b.originalIndex);
+            sortedMetrics.forEach(({ metric, originalIndex }) => {
                 // We pass only the single metric value [metricValues[i]] 
                 // and the single metric config [metric] to processNode
-                processNode(tree, [...rowDims, metric.name], colDims, [metricValues[i]], colKeys, config, [metric]);
+                processNode(tree, [...rowDims, metric.name], colDims, [metricValues[originalIndex]], colKeys, config, [metric]);
             });
         } 
         else if (metricLayout === 'METRIC_FIRST_ROW' && allMetrics.length > 0) {
             // METRIC_FIRST_ROW: Metric Name is the FIRST dimension in the row path
-            allMetrics.forEach((metric, i) => {
-                processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[i]], colKeys, config, [metric]);
+            const sortedMetrics = allMetrics.map((m, i) => ({ metric: m, originalIndex: i }))
+                                            .sort((a, b) => a.originalIndex - b.originalIndex);
+            sortedMetrics.forEach(({ metric, originalIndex }) => {
+                processNode(tree, [metric.name, ...rowDims], colDims, [metricValues[originalIndex]], colKeys, config, [metric]);
             });
         } 
         else if (metricLayout === 'METRIC_FIRST_COLUMN' && allMetrics.length > 0) {
             // METREC_FIRST_COLUMN: Metric Name is the FIRST dimension in the column path
-            allMetrics.forEach((metric, i) => {
-                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[i]], colKeys, config, [metric]);
+            const sortedMetrics = allMetrics.map((m, i) => ({ metric: m, originalIndex: i }))
+                                            .sort((a, b) => a.originalIndex - b.originalIndex);
+            sortedMetrics.forEach(({ metric, originalIndex }) => {
+                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[originalIndex]], colKeys, config, [metric]);
             });
         } 
         else { 
