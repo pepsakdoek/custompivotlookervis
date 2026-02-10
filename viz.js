@@ -32,10 +32,25 @@ function getStyleValue(style, id, defaultValue) {
     return (style[id] && typeof style[id].value !== 'undefined') ? style[id].value : defaultValue;
 }
 // Enhanced aggregation to support SUM, AVG, etc.
-function aggregateMetrics(existing, addition, metrics) {
+function aggregateMetrics(existing, addition, metrics, metricIndexToUpdate = -1) {
     if (!existing) {
-        // If this is the first run, initialize based on the `metrics` array
-        // to ensure `existing` always has the correct length from the start.
+        existing = metrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+    }
+
+    if (metricIndexToUpdate !== -1) {
+        // Special path for METRIC_FIRST_COLUMN and METRIC_ROW layouts
+        // 'addition' is a single value, 'metricIndexToUpdate' is its index
+        const val = addition[0];
+        if (val !== undefined && val !== null) {
+            let stats = existing[metricIndexToUpdate];
+            stats.sum += val;
+            stats.count += 1;
+            if (val < stats.min) stats.min = val;
+            if (val > stats.max) stats.max = val;
+        }
+        return existing;
+    } else {
+        // Standard path for METRIC_COLUMN layout
         return metrics.map((_, i) => {
             const val = addition[i];
             // Check if a value was actually provided for this metric index
@@ -52,40 +67,6 @@ function aggregateMetrics(existing, addition, metrics) {
             };
         });
     }
-
-    // On subsequent runs, loop through all configured metrics
-    metrics.forEach((metric, i) => {
-        const val = addition[i];
-
-        // If no value is provided for this metric in the current data row, skip it.
-        if (val === undefined || val === null) {
-            return; // Equivalent to 'continue' in a forEach
-        }
-
-        let stats = existing[i];
-
-        // This is the key change: If no stats object exists for this metric, create it.
-        // This handles the case you described.
-        if (!stats) {
-            stats = { sum: 0, count: 0, min: Infinity, max: -Infinity };
-            existing[i] = stats;
-        }
-
-        // Now, safely update the stats
-        stats.sum += val;
-        stats.count += 1;
-
-        // On the first actual value, min/max are the value itself.
-        if (stats.count === 1) {
-            stats.min = val;
-            stats.max = val;
-        } else {
-            if (val < stats.min) stats.min = val;
-            if (val > stats.max) stats.max = val;
-        }
-    });
-
-    return existing;
 }
 
 function aggregateMetricStats(statsArray) {
@@ -562,6 +543,37 @@ function getAggregatedNodeMetricsAllCols(node, config) {
     }
     return result;
 }
+
+/**
+ * A specific aggregator for the Grand Total row in METRIC_FIRST_COLUMN layout.
+ * It collects all metric stats from all leaf nodes of the entire row tree.
+ */
+function getAggregatedGrandTotalMetrics(node, config) {
+    let allStats = [];
+    function collect(curr) {
+        if (Object.keys(curr.children).length === 0) { // isLeaf
+            Object.values(curr.metrics).forEach(metricArray => {
+                allStats.push(metricArray);
+            });
+        } else {
+            Object.values(curr.children).forEach(child => collect(child));
+        }
+    }
+    collect(node);
+
+    if (allStats.length === 0) return null;
+
+    const allMetrics = [...config.metrics, ...config.metricsForCalcs];
+    const result = allMetrics.map(() => ({ sum: 0, count: 0, min: Infinity, max: -Infinity }));
+
+    for (let i = 0; i < allMetrics.length; i++) {
+        const statsForOneMetric = allStats.map(leafStatsArray => leafStatsArray[i]).filter(Boolean);
+        if (statsForOneMetric.length > 0) {
+            result[i] = aggregateMetricStats(statsForOneMetric);
+        }
+    }
+    return result;
+}
 function buildDataTree(config, data) {
     const allMetrics = [...config.metrics, ...config.metricsForCalcs];
     const tree = {
@@ -617,7 +629,7 @@ function buildDataTree(config, data) {
             const sortedMetrics = allMetrics.map((m, i) => ({ metric: m, originalIndex: i }))
                                             .sort((a, b) => a.originalIndex - b.originalIndex);
             sortedMetrics.forEach(({ metric, originalIndex }) => {
-                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[originalIndex]], colKeys, config, [metric]);
+                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[originalIndex]], colKeys, config, allMetrics, originalIndex);
             });
         } 
         else { 
@@ -639,7 +651,7 @@ function buildDataTree(config, data) {
     return tree;
 }
 
-function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg) {
+function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg, metricIndexToUpdate = -1) {
     const leafColKey = colDims.join('||');
     colKeys.add(leafColKey);
     
@@ -660,12 +672,12 @@ function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metr
     
     // Store metrics only at the leaf row node
     if (!rowNode.metrics) rowNode.metrics = {};
-    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg);
+    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg, metricIndexToUpdate);
     
     // PHASE 1: Build column hierarchy (same as before - needed for sorting)
     let colNode = tree.colRoot;
     if (!colNode.metrics) colNode.metrics = null;
-    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg, metricIndexToUpdate);
     colDims.forEach((dimValue, i) => {
         if (!colNode.children[dimValue]) {
             colNode.children[dimValue] = {
@@ -677,7 +689,7 @@ function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metr
         }
         colNode = colNode.children[dimValue];
         if (!colNode.metrics) colNode.metrics = null;
-        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg, metricIndexToUpdate);
     });
 }
 function renderBodyMetricColumn(tbody, tree, config) {
@@ -1105,8 +1117,12 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
         }
 
+        // For Grand Totals, we fetch all stats once. For subtotals, we fetch per column.
+        const grandTotalStats = isGrandTotal ? getAggregatedGrandTotalMetrics(node, config) : null;
+
         (tree.colDefs || []).forEach(colDef => {
-            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
+            // Use pre-fetched grandTotalStats if available, otherwise fetch for the specific subtotal column.
+            const nodeStats = isGrandTotal ? grandTotalStats : getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
             
             const keyParts = colDef.key.split('||');
             const metricName = keyParts[0];
@@ -1128,8 +1144,7 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
 
             let val;
             if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
-                // For METRIC_FIRST_COLUMN, getAggregatedNodeMetrics returns stats for a single metric, so we use index 0
-                val = getAggregatedValue(nodeStats ? nodeStats[0] : null, aggTypeUpper || 'SUM');
+                val = getAggregatedValue(nodeStats ? nodeStats[metricIndex] : null, aggTypeUpper || 'SUM');
             } else {
                 val = getCustomAggregatedValue(aggString, nodeStats, config);
             }
@@ -1229,8 +1244,7 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
 
             let cellValue = null;
             if (stats) {
-                // If it's a subtotal column, stats is an array of all metrics, so pick the one for this colDef's metric.
-                cellValue = colDef.isSubtotal ? stats[metricIndex] : stats[0];
+                cellValue = stats[metricIndex];
             }
             renderMetricCell(tr, cellValue, metricIndex, config);
         });

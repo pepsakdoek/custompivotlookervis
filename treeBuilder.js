@@ -53,7 +53,7 @@ function buildDataTree(config, data) {
             const sortedMetrics = allMetrics.map((m, i) => ({ metric: m, originalIndex: i }))
                                             .sort((a, b) => a.originalIndex - b.originalIndex);
             sortedMetrics.forEach(({ metric, originalIndex }) => {
-                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[originalIndex]], colKeys, config, [metric]);
+                processNode(tree, rowDims, [metric.name, ...colDims], [metricValues[originalIndex]], colKeys, config, allMetrics, originalIndex);
             });
         } 
         else { 
@@ -75,7 +75,7 @@ function buildDataTree(config, data) {
     return tree;
 }
 
-function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg) {
+function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metricsForAgg, metricIndexToUpdate = -1) {
     const leafColKey = colDims.join('||');
     colKeys.add(leafColKey);
     
@@ -96,12 +96,12 @@ function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metr
     
     // Store metrics only at the leaf row node
     if (!rowNode.metrics) rowNode.metrics = {};
-    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg);
+    rowNode.metrics[leafColKey] = aggregateMetrics(rowNode.metrics[leafColKey], metricValues, metricsForAgg, metricIndexToUpdate);
     
     // PHASE 1: Build column hierarchy (same as before - needed for sorting)
     let colNode = tree.colRoot;
     if (!colNode.metrics) colNode.metrics = null;
-    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+    colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg, metricIndexToUpdate);
     colDims.forEach((dimValue, i) => {
         if (!colNode.children[dimValue]) {
             colNode.children[dimValue] = {
@@ -113,6 +113,6 @@ function processNode(tree, rowDims, colDims, metricValues, colKeys, config, metr
         }
         colNode = colNode.children[dimValue];
         if (!colNode.metrics) colNode.metrics = null;
-        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg);
+        colNode.metrics = aggregateMetrics(colNode.metrics, metricValues, metricsForAgg, metricIndexToUpdate);
     });
 }
