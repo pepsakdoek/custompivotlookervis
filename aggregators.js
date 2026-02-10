@@ -434,11 +434,26 @@ function getCustomAggregatedValue(aggString, metricStats, config) {
 function getAggregatedNodeMetrics(node, colDefKey, config, isSubtotalCol) {
     let aggregatedStatsArray = []; // Array to hold all leaf stat arrays
 
+    // In the zero-row-dim case, the 'node' is tree.rowRoot, which is a leaf-like
+    // node containing all metrics. We need to check it directly.
+    if (Object.keys(node.children).length === 0) {
+        if (isSubtotalCol) {
+            Object.entries(node.metrics).forEach(([key, stats]) => {
+                if (key.startsWith(colDefKey + '||') || key === colDefKey) {
+                    aggregatedStatsArray.push(stats);
+                }
+            });
+        } else if (node.metrics[colDefKey]) {
+            aggregatedStatsArray.push(node.metrics[colDefKey]);
+        }
+        // After this, the function continues as normal to aggregate the collected stats.
+    } else {
+        // Original recursive collection for tables with row dimensions
     function collect(curr) {
         if (Object.keys(curr.children).length === 0) { // isLeaf
             if (isSubtotalCol) {
                 Object.entries(curr.metrics).forEach(([key, stats]) => {
-                    if (key.startsWith(colDefKey + '||')) {
+                    if (key.startsWith(colDefKey + '||') || key === colDefKey) {
                         aggregatedStatsArray.push(stats);
                     }
                 });
@@ -453,6 +468,8 @@ function getAggregatedNodeMetrics(node, colDefKey, config, isSubtotalCol) {
     }
 
     collect(node);
+    }
+
 
     if (aggregatedStatsArray.length === 0) {
         return null;
