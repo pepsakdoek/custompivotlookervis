@@ -1,6 +1,11 @@
 function renderBodyMetricColumn(tbody, tree, config) {
+    debugLog('=== renderBodyMetricColumn START ===');
+    debugLog('Tree structure:', JSON.stringify(tree, null, 2));
+    debugLog('Config rowSettings:', config.rowSettings);
+    debugLog('Config showColumnGrandTotal:', config.showColumnGrandTotal);
 
     function renderTotalsRow(node, isGrandTotal) {
+        debugLog(`--- renderTotalsRow called: isGrandTotal=${isGrandTotal}, node.value=${node.value}, node.level=${node.level}`);
         // This is the Subtotal ROW for the COLUMNS
         const tr = tbody.insertRow();
         tr.style.fontWeight = 'bold';
@@ -66,29 +71,45 @@ function renderBodyMetricColumn(tbody, tree, config) {
     }
 
     function recursiveRender(node, path) {
-        // Handle the edge case where there are no row dimensions.
-        // The data is on the root node itself.
-        if (node.level === -1 && Object.keys(node.children).length === 0) {
+        debugLog(`>>> recursiveRender: path=[${path}], node.level=${node.level}, children count=${Object.keys(node.children).length}`);
+        
+        let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
+        // EDGE CASE for no dim tables
+        if (sortedChildren.length === 0 && path.length === 0) {
+            debugLog(`  >> Special case: 0 row dims, rendering single row from rowRoot`);
             const tr = tbody.insertRow();
             tr.classList.add('DR');
 
+            // No dimension cells to add since there are 0 row dims
+
             (tree.colDefs || []).forEach(colDef => {
+                debugLog(`  >> Processing colDef: key="${colDef.key}", isSubtotal=${colDef.isSubtotal}`);
+                
                 const stats = node.metrics[colDef.key];
+                debugLog(`  >> Stats for colDef "${colDef.key}":`, stats);
+
+                // Loop through all metrics (primary only, no calcs needed for display)
                 config.metrics.forEach((m, i) => {
                     const cellValue = stats ? stats[i] : null;
+                    debugLog(`  >> Metric ${i} (${m.name}): cellValue=`, cellValue);
                     renderMetricCell(tr, cellValue, i, config);
                 });
             });
-            return; // We're done, no recursion needed.
+            
+            // No row grand total for 0 row dims case
+            return;
         }
-
-        let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
 
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
+            
+            debugLog(`  > Child: value="${childNode.value}", isLeaf=${isLeaf}, newPath=[${newPath}]`);
 
             if (isLeaf) {
+                // debugLog(`  >> RENDERING LEAF NODE: ${childNode.value}`);
+                // debugLog(`  >> childNode.metrics keys:`, Object.keys(childNode.metrics || {}));
+                
                 const tr = tbody.insertRow();
                 tr.classList.add('DR');
 
@@ -109,14 +130,20 @@ function renderBodyMetricColumn(tbody, tree, config) {
                 }
 
                 (tree.colDefs || []).forEach(colDef => {
+                    debugLog(`  >> Processing colDef: key="${colDef.key}", isSubtotal=${colDef.isSubtotal}`);
+                    
                     const stats = colDef.isSubtotal 
                         ? getAggregatedNodeMetrics(childNode, colDef.key, config, true) 
                         : childNode.metrics[colDef.key];
+                    
+                    // debugLog(`  >> Stats for colDef "${colDef.key}":`, stats);
 
                     // Loop through all metrics (primary + forCalcs) to populate rowTotals
                     const allMetrics = [...config.metrics, ...config.metricsForCalcs];
                     allMetrics.forEach((m, i) => {
                         const cellValue = stats ? stats[i] : null;
+                        
+                        // debugLog(`  >> Metric ${i} (${m.name}): cellValue=`, cellValue);
 
                         // Only render cells for the primary metrics
                         if (i < config.metrics.length) {
@@ -160,11 +187,14 @@ function renderBodyMetricColumn(tbody, tree, config) {
                     });
                 }
             } else {
+                // debugLog(`  >> RECURSING into non-leaf node: ${childNode.value}`);
                 recursiveRender(childNode, newPath);
 
                 // SUBTOTAL LOGIC FOR METRIC_COLUMN
                 const settings = config.rowSettings[childNode.level];
+                debugLog(`  >> Checking subtotal for level ${childNode.level}:`, settings);
                 if (settings && settings.subtotal) {
+                    // debugLog(`  >> RENDERING SUBTOTAL for node: ${childNode.value}`);
                     renderTotalsRow(childNode, false);
                 }
             }

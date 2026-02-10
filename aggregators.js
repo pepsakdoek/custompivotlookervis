@@ -138,47 +138,51 @@ function formatCompact(num) {
 
 
 function calculateSubtotals(tree, config, metricsForAgg, colKeys) {
+    // debugLog('=== calculateSubtotals START ===');
+    // debugLog('metricsForAgg length:', metricsForAgg.length);
+    // debugLog('colKeys:', Array.from(colKeys));
+    
     // PHASE 2: Calculate subtotals from leaf nodes only
     // This prevents double-counting by always aggregating from leaves
     
-    function aggregateLeafValues(node, path, targetPath, colKey) {
-        // Recursively find all leaf nodes that match the targetPath prefix
-        // and aggregate their values for the given colKey
-        if (Object.keys(node.children).length === 0) {
-            // This is a leaf node
-            if (node.metrics && node.metrics[colKey]) {
-                return node.metrics[colKey];
-            }
-            return null;
-        }
-        
-        // Not a leaf, so recurse through children
-        let aggregated = null;
-        Object.values(node.children).forEach(child => {
-            const childAgg = aggregateLeafValues(child, [...path, child.value], targetPath, colKey);
-            if (childAgg) {
-                aggregated = aggregateMetrics(aggregated, [childAgg.sum, childAgg.count], metricsForAgg);
-            }
-        });
-        return aggregated;
-    }
-    
     // For each row dimension level, calculate subtotals if enabled
     const rowDims = config.rowDims || [];
+    // debugLog('rowDims:', rowDims);
+    
     for (let level = 0; level < rowDims.length; level++) {
         const subtotalConfig = config.rowSettings[level];
+        // debugLog(`Checking level ${level}:`, subtotalConfig);
+        
         if (!subtotalConfig || !subtotalConfig.subtotal) continue;
+        
+        // debugLog(`>>> SUBTOTAL ENABLED for level ${level} <<<`);
         
         // Walk the row tree at this level and aggregate children
         function processRowLevel(node, path) {
             if (path.length === level) {
+                // debugLog(`  At target level ${level}, processing children of path: [${path}]`);
+                
                 // We're at the target level - aggregate this node's children
                 Object.values(node.children).forEach(child => {
+                    const childrenCount = Object.keys(child.children).length;
+                    // debugLog(`    Child "${child.value}": has ${childrenCount} children, isLeaf=${childrenCount === 0}`);
+                    
+                    // CRITICAL FIX: Only calculate subtotals for non-leaf nodes
+                    // If this child has no children, it's already a leaf and doesn't need subtotals
+                    if (childrenCount === 0) {
+                        // debugLog(`    >> SKIPPING leaf node "${child.value}" - no subtotal needed`);
+                        // This is a leaf node - skip subtotal calculation
+                        return;
+                    }
+                    
+                    // debugLog(`    >> CALCULATING subtotals for non-leaf node "${child.value}"`);
+                    
                     // For each column key, aggregate leaf descendants
                     Array.from(colKeys).forEach(colKey => {
                         if (!child.metrics) child.metrics = {};
                         const aggregated = aggregateLeafValuesFromNode(child, colKey, metricsForAgg);
                         if (aggregated) {
+                            // debugLog(`      Aggregated for colKey "${colKey}":`, aggregated);
                             child.metrics[colKey] = aggregated;
                         }
                     });
@@ -192,19 +196,34 @@ function calculateSubtotals(tree, config, metricsForAgg, colKeys) {
         }
         processRowLevel(tree.rowRoot, []);
     }
+    // debugLog('=== calculateSubtotals END ===');
 }
 
 function aggregateLeafValuesFromNode(parentNode, colKey, metricsForAgg) {
+    // debugLog(`  >> aggregateLeafValuesFromNode: parentNode="${parentNode.value}", colKey="${colKey}"`);
+    
     // Find all leaf descendants and aggregate their metrics for this colKey
     let aggregated = null;
     
     function walkToLeaves(node) {
         if (Object.keys(node.children).length === 0) {
-            // Leaf node
+            // debugLog(`    >> Found leaf: "${node.value}"`);
+            // Leaf node - aggregate its metrics
             if (node.metrics && node.metrics[colKey]) {
-                aggregated = aggregateMetrics(aggregated, 
-                    [node.metrics[colKey].sum], 
-                    [{sum: node.metrics[colKey].sum, count: 1}]);
+                // CRITICAL FIX: We need to aggregate the entire stats array, not just the sum
+                // The original code was incorrectly passing individual values
+                const leafStats = node.metrics[colKey];
+                // debugLog(`    >> Leaf stats for colKey "${colKey}":`, leafStats);
+                
+                // leafStats is already an array of stats objects (one per metric)
+                // We need to convert this to the format aggregateMetrics expects
+                const valuesArray = leafStats.map(stat => stat.sum);
+                // debugLog(`    >> Values array to aggregate:`, valuesArray);
+                
+                aggregated = aggregateMetrics(aggregated, valuesArray, metricsForAgg);
+                // debugLog(`    >> Aggregated result so far:`, aggregated);
+            } else {
+                // debugLog(`    >> Leaf has no metrics for colKey "${colKey}"`);
             }
             return;
         }
@@ -212,6 +231,7 @@ function aggregateLeafValuesFromNode(parentNode, colKey, metricsForAgg) {
     }
     
     walkToLeaves(parentNode);
+    // debugLog(`  >> Final aggregated result:`, aggregated);
     return aggregated;
 }
 
@@ -248,17 +268,7 @@ function getFinalColKeys(node, path, config) {
     const settings = config.colSettings;
     const sortConfig = settings[node.level + 1];
     let sortedChildren = Object.values(node.children);
-
-    // Special sort for METRIC_FIRST_COLUMN: the first level children are metrics
-    // and should be sorted by their original index, not name.
-    // if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level === -1 && sortedChildren.length > 1) {
-    //     sortedChildren.sort((a, b) => {
-    //         const idxA = config.metrics.findIndex(m => m.name === a.value) ?? Infinity;
-    //         const idxB = config.metrics.findIndex(m => m.name === b.value) ?? Infinity;
-    //         return idxA - idxB;
-    //     });
-    // }
-    // Otherwise, sort children based on user-defined config
+    // Sort children based on config
     if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
         sortedChildren.sort((a, b) => {
             let valA, valB;
@@ -287,19 +297,11 @@ function getFinalColKeys(node, path, config) {
         }] : [];
     }
     // Recursive step: get keys from children.
-    let finalKeys;
-    // if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level > -1) {
-    //     // For METRIC_FIRST_COLUMN, we need to process children in reverse to get the correct visual order
-    //     finalKeys = sortedChildren.reverse().flatMap(child => getFinalColKeys(child, [...path, child.value], config));
-    // } else {
-        finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
-    // }
-
+    let finalKeys = sortedChildren.flatMap(child => getFinalColKeys(child, [...path, child.value], config));
     // Add subtotal for the current node after its children.
     const subtotalConfig = settings[node.level];
     if (subtotalConfig && subtotalConfig.subtotal && path.length > 0) {
-        // Note: debugLog is not a standard function, assuming it's for development.
-        debugLog('Creating subtotal colDef for path:', path);
+        // debugLog('Creating subtotal colDef for path:', path);
         finalKeys.push({
             key: path.join('||'),
             isSubtotal: true,
