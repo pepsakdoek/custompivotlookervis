@@ -33,5 +33,5 @@ Frozen behaviour not 100% in general, but here are specific bugs:
  * Probably related, there is a bit of an transparent border that you can see the table scrolling 'behind' likely if that is fixed above will also be fixed
  * This behaviour still happens with 2 frozen columns, but only the first column is affected (by the text moving), the 2nd column looks fixed (see test 8: Metric as rows and Metric as Rows 1st)
 * Column headers 'flies over' the topleft cell, when scrolling horizontally, this only seem to happen when the 'frozen' rows are 3 or more, and the top left cell has a rowspan of 2 or more
-
+* add show as % of row / column / grand total as display options
 

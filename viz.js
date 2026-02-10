@@ -1459,7 +1459,7 @@ function renderHeader(table, tree, config) {
 
             // Add "metric" header first
             const metricTh = document.createElement('th');
-            metricTh.textContent = 'metric';
+            metricTh.textContent = 'Metric';
             metricTh.classList.add('MRH');
             lastHeaderRow.appendChild(metricTh);
 
