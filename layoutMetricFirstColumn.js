@@ -46,11 +46,12 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
 
             let val;
             if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
-                val = getAggregatedValue(nodeStats ? nodeStats[metricIndex] : null, aggTypeUpper || 'SUM');
+                // For METRIC_FIRST_COLUMN, getAggregatedNodeMetrics returns stats for a single metric, so we use index 0
+                val = getAggregatedValue(nodeStats ? nodeStats[0] : null, aggTypeUpper || 'SUM');
             } else {
                 val = getCustomAggregatedValue(aggString, nodeStats, config);
             }
-
+            
             cell.textContent = formatMetricValue(val, config.metricFormats[metricIndex]);
         });
 

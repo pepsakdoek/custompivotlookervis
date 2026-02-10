@@ -267,37 +267,39 @@ function getSortedKeys(node, path, config, settingsKey) {
 function getFinalColKeys(node, path, config) {
     const settings = config.colSettings;
     const sortConfig = settings[node.level + 1];
-    let sortedChildren = Object.values(node.children);    
+    let sortedChildren = Object.values(node.children);
 
-    // Special sorting for METRIC_FIRST_COLUMN layout
-    if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level === -1) {
-        // The first level children are metrics, sort them by their original index
-        sortedChildren.sort((a, b) => {
-            const idxA = config.metrics.findIndex(m => m.name === a.value);
-            const idxB = config.metrics.findIndex(m => m.name === b.value);
-            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
-        });
-    } else {
-        // Standard sorting for all other cases
-        if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
+    // Sort children based on config
+    if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
+        // Special sorting for METRIC_FIRST_COLUMN layout at the metric level
+        if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level === -1) {
+            // The first level children are metrics, sort them by their original index
             sortedChildren.sort((a, b) => {
-                let valA, valB;
-                if (sortConfig.sortType === 'METRIC') {
-                    const metricIdx = sortConfig.sortMetricIndex;
-                    valA = getAggregatedValue(a.metrics?.[metricIdx], sortConfig.sortAgg);
-                    valB = getAggregatedValue(b.metrics?.[metricIdx], sortConfig.sortAgg);
-                } else { // DIMENSION
-                    valA = a.value;
-                    valB = b.value;
-                }
-                const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
-                if (valA === undefined || valA === null) return 1 * order;
-                if (valB === undefined || valB === null) return -1 * order;
-                if (valA < valB) return -1 * order;
-                if (valA > valB) return 1 * order;
-                return 0;
+                const idxA = config.metrics.findIndex(m => m.name === a.value);
+                const idxB = config.metrics.findIndex(m => m.name === b.value);
+                // Simple index comparison, no need for ASC/DESC logic here as it's about original order
+                return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
             });
-        }
+        } else {
+            // Standard sorting for all other cases
+            sortedChildren.sort((a, b) => {
+                 let valA, valB;
+                 if (sortConfig.sortType === 'METRIC') {
+                     const metricIdx = sortConfig.sortMetricIndex;
+                     valA = getAggregatedValue(a.metrics?.[metricIdx], sortConfig.sortAgg);
+                     valB = getAggregatedValue(b.metrics?.[metricIdx], sortConfig.sortAgg);
+                 } else { // DIMENSION
+                     valA = a.value;
+                     valB = b.value;
+                 }
+                 const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
+                 if (valA === undefined || valA === null) return 1 * order;
+                 if (valB === undefined || valB === null) return -1 * order;
+                 if (valA < valB) return -1 * order;
+                 if (valA > valB) return 1 * order;
+                 return 0;
+             });
+         }
     }
 
     // Base case: if it's a leaf node.
