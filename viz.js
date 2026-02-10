@@ -295,27 +295,39 @@ function getSortedKeys(node, path, config, settingsKey) {
 function getFinalColKeys(node, path, config) {
     const settings = config.colSettings;
     const sortConfig = settings[node.level + 1];
-    let sortedChildren = Object.values(node.children);
-    // Sort children based on config
-    if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
+    let sortedChildren = Object.values(node.children);    
+
+    // Special sorting for METRIC_FIRST_COLUMN layout
+    if (config.metricLayout === 'METRIC_FIRST_COLUMN' && node.level === -1) {
+        // The first level children are metrics, sort them by their original index
         sortedChildren.sort((a, b) => {
-            let valA, valB;
-            if (sortConfig.sortType === 'METRIC') {
-                const metricIdx = sortConfig.sortMetricIndex;
-                valA = getAggregatedValue(a.metrics?.[metricIdx], sortConfig.sortAgg);
-                valB = getAggregatedValue(b.metrics?.[metricIdx], sortConfig.sortAgg);
-            } else { // DIMENSION
-                valA = a.value;
-                valB = b.value;
-            }
-            const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
-            if (valA === undefined || valA === null) return 1 * order;
-            if (valB === undefined || valB === null) return -1 * order;
-            if (valA < valB) return -1 * order;
-            if (valA > valB) return 1 * order;
-            return 0;
+            const idxA = config.metrics.findIndex(m => m.name === a.value);
+            const idxB = config.metrics.findIndex(m => m.name === b.value);
+            return (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
         });
+    } else {
+        // Standard sorting for all other cases
+        if (sortConfig && (sortConfig.sortType === 'METRIC' || sortConfig.sortType === 'DIMENSION')) {
+            sortedChildren.sort((a, b) => {
+                let valA, valB;
+                if (sortConfig.sortType === 'METRIC') {
+                    const metricIdx = sortConfig.sortMetricIndex;
+                    valA = getAggregatedValue(a.metrics?.[metricIdx], sortConfig.sortAgg);
+                    valB = getAggregatedValue(b.metrics?.[metricIdx], sortConfig.sortAgg);
+                } else { // DIMENSION
+                    valA = a.value;
+                    valB = b.value;
+                }
+                const order = sortConfig.sortDir === 'ASC' ? 1 : -1;
+                if (valA === undefined || valA === null) return 1 * order;
+                if (valB === undefined || valB === null) return -1 * order;
+                if (valA < valB) return -1 * order;
+                if (valA > valB) return 1 * order;
+                return 0;
+            });
+        }
     }
+
     // Base case: if it's a leaf node.
     if (sortedChildren.length === 0) {
         return path.length > 0 ? [{
@@ -1067,10 +1079,10 @@ function renderBodyMetricRow(tbody, tree, config) {
 }
 
 function renderBodymetricFirstColumn(tbody, tree, config) {
-    debugLog('=== renderBodymetricFirstColumn START ===');
+    // debugLog('=== renderBodymetricFirstColumn START ===');
 
     function renderTotalsRow(node, isGrandTotal) {
-        debugLog(`--- renderTotalsRow called: isGrandTotal=${isGrandTotal}, node.value=${node.value}, node.level=${node.level}`);
+        // debugLog(`--- renderTotalsRow called: isGrandTotal=${isGrandTotal}, node.value=${node.value}, node.level=${node.level}`);
         const tr = tbody.insertRow();
         tr.style.fontWeight = 'bold';
 
@@ -1114,7 +1126,7 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
 
             let val;
             if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
-                val = getAggregatedValue(nodeStats ? nodeStats[0] : null, aggTypeUpper || 'SUM');
+                val = getAggregatedValue(nodeStats ? nodeStats[metricIndex] : null, aggTypeUpper || 'SUM');
             } else {
                 val = getCustomAggregatedValue(aggString, nodeStats, config);
             }
@@ -1151,11 +1163,11 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
     }
 
     function recursiveRender(node, path) {
-        debugLog(`>>> recursiveRender: path=[${path}], node.level=${node.level}, children count=${Object.keys(node.children).length}`);
+        // debugLog(`>>> recursiveRender: path=[${path}], node.level=${node.level}, children count=${Object.keys(node.children).length}`);
         
         // EDGE CASE for no row dims
         if (config.rowDims.length === 0 && path.length === 0 && node.level === -1) {
-            debugLog(`  >> Special case: 0 row dims, rendering single row from rowRoot`);
+            // debugLog(`  >> Special case: 0 row dims, rendering single row from rowRoot`);
             const tr = tbody.insertRow();
             tr.classList.add('DR');
 
@@ -1167,14 +1179,12 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             return;
         }
 
-
         let sortedChildren = sortChildren(Object.values(node.children), config.rowSettings[node.level + 1]);
-
         sortedChildren.forEach(childNode => {
             const newPath = [...path, childNode.value];
             const isLeaf = Object.keys(childNode.children).length === 0;
             
-            debugLog(`  > Child: value="${childNode.value}", isLeaf=${isLeaf}, newPath=[${newPath}]`);
+            // debugLog(`  > Child: value="${childNode.value}", isLeaf=${isLeaf}, newPath=[${newPath}]`);
             if (isLeaf) {
                 const tr = tbody.insertRow();
                 tr.classList.add('DR');
@@ -1196,7 +1206,7 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
                 recursiveRender(childNode, newPath);
 
                 const settings = config.rowSettings[childNode.level];
-                debugLog(`  >> Checking subtotal for level ${childNode.level}:`, settings);
+                // debugLog(`  >> Checking subtotal for level ${childNode.level}:`, settings);
                 if (settings && settings.subtotal) {
                     renderTotalsRow(childNode, false);
                 }
@@ -1214,7 +1224,11 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             const metricName = keyParts[0];
             const metricIndex = config.metrics.findIndex(m => m.name === metricName);
 
-            const cellValue = stats ? stats[0] : null; // In this layout, each colDef is for one metric
+            let cellValue = null;
+            if (stats) {
+                // If it's a subtotal column, stats is an array of all metrics, so pick the one for this colDef's metric.
+                cellValue = colDef.isSubtotal ? stats[metricIndex] : stats[0];
+            }
             renderMetricCell(tr, cellValue, metricIndex, config);
         });
     }
@@ -1229,12 +1243,16 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             cell.style.fontWeight = 'bold';
             cell.classList.add('RGV', `RGV${i + 1}`);
 
+            // The `grandTotalStats` array holds the aggregated stats for each metric (at index i).
+            const metricStats = grandTotalStats ? grandTotalStats[i] : null;
+
             let val;
-            if (!grandTotalStats || !grandTotalStats[i]) {
+            if (!metricStats) {
                 val = null;
             } else if (['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', ''].includes(aggTypeUpper)) {
-                val = getAggregatedValue(grandTotalStats[i], aggTypeUpper || 'SUM');
+                val = getAggregatedValue(metricStats, aggTypeUpper || 'SUM');
             } else {
+                // Custom aggregations operate on the full array of metric stats.
                 val = getCustomAggregatedValue(aggString, grandTotalStats, config);
             }
 
@@ -1741,27 +1759,15 @@ function renderHeader(table, tree, config) {
 
             if (config.showRowGrandTotal) {
                 const th = document.createElement('th');
-                th.textContent = 'Grand Total';
-                th.colSpan = metrics.length;
-                // If there are other column headers, this should span fewer rows
-                // to align with the other top-level headers.
-                if (colHeaderRowCount > 1) {
-                    th.rowSpan = 1; 
-                } else {
-                    th.rowSpan = colHeaderRowCount;
-                }
-                th.classList.add('RGH');
-                headerRows[0].appendChild(th);
-
-                // Add metric names under the grand total header if there are column dimensions
-                if (hasColDims) {
-                    metrics.forEach((m, i) => {
-                        const metricTh = document.createElement('th');
-                        metricTh.textContent = m.name;
-                        metricTh.classList.add('MH', `MH${i + 1}`);
-                        headerRows[1].appendChild(metricTh); // Add to the second header row
-                    });
-                }
+                // Instead of a single "Grand Total" spanning all metrics,
+                // create a "Grand Total <Metric Name>" for each metric.
+                metrics.forEach((m, i) => {
+                    const grandTotalMetricTh = document.createElement('th');
+                    grandTotalMetricTh.textContent = `Grand Total ${m.name}`;
+                    grandTotalMetricTh.rowSpan = colHeaderRowCount;
+                    grandTotalMetricTh.classList.add('RGH', `RGH${i + 1}`);
+                    headerRows[0].appendChild(grandTotalMetricTh);
+                });
             }
             break;
         }
