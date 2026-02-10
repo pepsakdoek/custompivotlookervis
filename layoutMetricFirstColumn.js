@@ -1,4 +1,4 @@
-function renderBodymetricFirstColumn(tbody, tree, config) {
+function renderBodyMetricFirstColumn(tbody, tree, config) {
     // debugLog('=== renderBodymetricFirstColumn START ===');
 
     function renderTotalsRow(node, isGrandTotal) {
@@ -23,12 +23,8 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
         }
 
-        // For Grand Totals, we fetch all stats once. For subtotals, we fetch per column.
-        const grandTotalStats = isGrandTotal ? getAggregatedGrandTotalMetrics(node, config) : null;
-
         (tree.colDefs || []).forEach(colDef => {
-            // Use pre-fetched grandTotalStats if available, otherwise fetch for the specific subtotal column.
-            const nodeStats = isGrandTotal ? grandTotalStats : getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
+            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
             
             const keyParts = colDef.key.split('||');
             const metricName = keyParts[0];

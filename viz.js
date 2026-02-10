@@ -1092,7 +1092,7 @@ function renderBodyMetricRow(tbody, tree, config) {
     }
 }
 
-function renderBodymetricFirstColumn(tbody, tree, config) {
+function renderBodyMetricFirstColumn(tbody, tree, config) {
     // debugLog('=== renderBodymetricFirstColumn START ===');
 
     function renderTotalsRow(node, isGrandTotal) {
@@ -1117,12 +1117,8 @@ function renderBodymetricFirstColumn(tbody, tree, config) {
             for (let i = node.level + 1; i < config.rowDims.length; i++) tr.insertCell();
         }
 
-        // For Grand Totals, we fetch all stats once. For subtotals, we fetch per column.
-        const grandTotalStats = isGrandTotal ? getAggregatedGrandTotalMetrics(node, config) : null;
-
         (tree.colDefs || []).forEach(colDef => {
-            // Use pre-fetched grandTotalStats if available, otherwise fetch for the specific subtotal column.
-            const nodeStats = isGrandTotal ? grandTotalStats : getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
+            const nodeStats = getAggregatedNodeMetrics(node, colDef.key, config, colDef.isSubtotal);
             
             const keyParts = colDef.key.split('||');
             const metricName = keyParts[0];
@@ -1807,7 +1803,7 @@ function renderBody(table, tree, config) {
             break;
         case 'METRIC_FIRST_COLUMN':
             debugLog('Rendering body with metric_FIRST_COLUMN layout');
-            renderBodymetricFirstColumn(tbody, tree, config);
+            renderBodyMetricFirstColumn(tbody, tree, config);
             break;
         case 'METRIC_COLUMN':
         default:

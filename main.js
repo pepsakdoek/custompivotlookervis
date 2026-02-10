@@ -14,7 +14,7 @@ function renderBody(table, tree, config) {
             break;
         case 'METRIC_FIRST_COLUMN':
             debugLog('Rendering body with metric_FIRST_COLUMN layout');
-            renderBodymetricFirstColumn(tbody, tree, config);
+            renderBodyMetricFirstColumn(tbody, tree, config);
             break;
         case 'METRIC_COLUMN':
         default:
