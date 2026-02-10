@@ -185,8 +185,9 @@ function renderBodyMetricRow(tbody, tree, config) {
     }
     recursiveRender(tree.rowRoot, []);
 
-    // Column Grand Totals (Bottom of table)
-    if (config.showColumnGrandTotal) {
+    // Column Grand Totals (Bottom of table) - only show if there are row dimensions.
+    // Otherwise, it's just a total of the metrics which may not be useful.
+    if (config.showColumnGrandTotal && config.rowDims.length > 0) {
         renderSubtotalRows(tree.rowRoot, 'Grand Total', true);
     }
 }
